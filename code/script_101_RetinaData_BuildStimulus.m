@@ -11,21 +11,26 @@ for icell = 1:53
         lag = lagshifts(icell) ;
         fsize = Nv(icell)^2;
         fid = fopen(['/whitenoisec' int2str(icell) '.isk'], 'rt');
+        %Response
         R = textscan(fid, '%u\n');
         fclose(fid);
         R = double(R{1,1});
         T = length(R);
         fid = fopen('whitenoise.raw', 'rb');
+        %Stimulus
         S = ReadFramev2(fid,T,Nx,Nv(icell),cx,x0(icell),y0(icell));
         fclose(fid);
         pX = length(S)/T;
         S = reshape(S, [pX T])';
+        %Remove mean, standardize by std 
         S = S - repmat(mean(S), [T 1]);
         S = S./repmat(std(S), [T 1]);
+        %Add lag to some cells (for some reason?)
         R = circshift(R,-lag);
         R = R(1:end-lag);
         T = length(R);
         S = S(1:end-lag,:);
+        %?? pT=?
         if pT>1
             T = T - (pT-1);
             p = pX*pT;
@@ -37,6 +42,7 @@ for icell = 1:53
             clear S1
             R = R(pT:length(R));
         end
+        %Keep some for validation
         itest = round(0.8*T):1:T ;
         St = S(itest,:) ;
         Rt = R(itest) ;

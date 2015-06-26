@@ -1,4 +1,4 @@
-function plot_filters_rc_network(model, data, processed, fn_out)
+function plot_filters_rc_network(models, data, processed, fn_out)
 	%Plot filters of a fitted GLM model, along with other fit statistics
 	%     
 	%Input:
@@ -8,40 +8,80 @@ function plot_filters_rc_network(model, data, processed, fn_out)
 	%	fn_out = base filename to write plots to for each unit
 	%
 
-	k = data.k; %filter names and indices
-	b_hat = model.b_hat(1,:);
-	dev = model.dev{1};
-	stats = model.stats{1};
-	const = b_hat(1);
-	spidx = data.sp_hist;
-	stmidx = k{2,2};
-	%Project onto standard basis
-	b_sphist = data.spbasis*b_hat(1,1+spidx)';
-	b_stm = b_hat(1,1+stmidx);
-	maxbstm = max(b_stm);
-	minbstm = min(b_stm);
-	nK_stm = data.nK_stm;
-	nX = length(stmidx)/nK_stm;
-	Nv = processed.Nv;
-	nP = 2 + nK_stm;
+	nM = length(models);
+	%Test run
+	%nM = 3;
+
+	nU = size(data.k,1)-1;
 	clf;
-	subplot(1,nP,1)
-	plot(b_sphist)
-	xlabel('bin')
-	ylabel('spike history')
-	colormap(pink);
-	for idx = 1:nK_stm
-		subplot(1,nP,1+idx)
-		frame = reshape(b_stm(nX*(idx-1)+1:nX*idx), Nv, []);
-		pcolor(frame)
-		caxis([minbstm, maxbstm])
+	maxbstm = 0;
+	minbstm = 0;
+	%Same color scale for all
+	for idx = 1:nM
+		model = models{idx};
+		k = data.k; %filter names and indices
+		b_hat = model.b_hat(1,:);
+		stmidx = k{2,2};
+		b_stm = b_hat(1,1+stmidx);
+		maxbstm = max(maxbstm, max(b_stm));
+		minbstm = min(minbstm, min(b_stm));
 	end
-	subplot(1,nP,nP);
+
+	for idx = 1:nM
+		idx
+		model = models{idx};
+		k = data.k; %filter names and indices
+		b_hat = model.b_hat(1,:);
+		dev = model.dev{1};
+		stats = model.stats{1};
+		const = b_hat(1);
+		stmidx = k{nU+1,2};
+		b_stm = b_hat(1,1+stmidx);
+		nK_stm = data.nK_stm;
+		nX = length(stmidx)/nK_stm;
+		Nv = processed.Nv;
+		nP = nU + nK_stm;
+		for j = 1:nU
+			subplot(nM+1,nP,(nP*(idx-1)+j))
+			spidx = data.k{j,2};
+			b_sphist = data.spbasis*b_hat(1,1+spidx)';
+			plot(b_sphist)
+			axis off
+		end
+		%ylabel('spike history')
+		colormap(pink);
+		for j = 1:nK_stm
+			subplot(nM+1,nP,(nP*(idx-1)+nU+j))
+			frame = reshape(b_stm(nX*(j-1)+1:nX*j), Nv, []);
+			h = pcolor(frame);
+			set(h, 'EdgeColor', 'none');
+			axis off
+			caxis([minbstm, maxbstm])
+		end
+	end
+	subplot(nM+1, nP, nP*nM+1)
+	axis off
+	str1(1) = {['Spike history']};
+	str1(2) = {['Solid=conv,cond']};
+	str1(3) = {['Dashed=not']};
+	text(0,0.8,str1)
+
+	for idx = 1:nK_stm
+		str1 = {};
+		subplot(nM+1, nP, nP*nM+nU+idx)
+		axis off
+		if idx == 1
+			str1(1) = {'Stimulus'};
+			str1(2) = {['t-' num2str(nK_stm+1-idx) '\Delta t']};
+		else
+			str1(1) = {['t-' num2str(nK_stm+1-idx) '\Delta t']};
+		end
+		text(0.1,0.8,str1)
+	end
 	caxis([minbstm, maxbstm])
-	axis off;
-	%ylabel('asdf')
-	colorbar('westoutside');
+	colorbar
 
 	%save eps
-	saveplot(gcf, fn_out, 'eps', [12,6]);
+	saveplot(gcf, fn_out, 'eps', [50,3]);
+
 end

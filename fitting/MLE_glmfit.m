@@ -42,7 +42,7 @@ function model = MLE_glmfit(data, const)
 	model.conditioned = ones(nU,1);
 	%For each unit, fit a GLM to the torque data
 	display(['Fitting GLM by MLE with IRLS. Fitting ' num2str(nU) ' units.'])
-	[b, dev, stats] = glmfit(squeeze(data.X),data.y(1,:),'poisson', 'constant', const);
+	[b, dev, stats] = glmfit_matlab(squeeze(data.X),data.y(1,:),'poisson', 'constant', const);
 	%Catch if a warning was raised about badly conditioned matrix
 	[warn, warnid] = lastwarn;
 	if ~strcmp(warn, '')

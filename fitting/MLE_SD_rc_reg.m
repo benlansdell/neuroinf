@@ -61,6 +61,7 @@ function [model, intermediates] = MLE_SD_rc_reg(data, lambda, const)
 	model.b_hat(1,:) = b;	
 	model.dev{1} = dev;
 	model.stats{1} = 0;
+	model.nspikes(1) = sum(data.y(1,:));
 
 	if ~strcmp(const, 'on')
 		model.b_hat = [zeros(1, 1), model.b_hat];
@@ -152,7 +153,7 @@ function h = hessian(X,y,b_hat,r,spbasis,cplidx,lambda)
 		end
 	end
 	%Reshape and add to hessian matrix
-	hp = reshape(hp,kp,jp,1,[]);
+	hp = reshape(hp,nRC,nF,1,[]);
 	hp = reshape(hp,1,[],1,nB);
 	hp = squeeze(hp);
 	h((cplidx+1),(cplidx+1)) = h((cplidx+1),(cplidx+1))+hp;

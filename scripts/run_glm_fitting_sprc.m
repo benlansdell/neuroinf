@@ -1,13 +1,14 @@
 responsefiles = struct2cell(dir('./data/*.isk'));
 responsefiles = responsefiles(1,:);
 stimfile = './data/whitenoise.raw';
-fn_out = './run_glm_fitting_sprc.eps';
+fn_out = './run_glm_fitting_sprc_a_10.eps';
 
 nK_sp = 20;
 nK_stm = 6;
 const = 'on';
 binsize = 1;
 models = {};
+a = 10;
 
 for idx = 1:length(responsefiles)
 	display(['Fitting unit ' num2str(idx)])
@@ -16,7 +17,7 @@ for idx = 1:length(responsefiles)
 	 responsefiles));
 	rf = responsefiles(unit);
 	processed = preprocess(stimfile, rf, binsize, idx);
-	data = filters_sprc_stm(processed, nK_sp, nK_stm);
+	data = filters_sprc_stm(processed, nK_sp, nK_stm, a);
 	models{idx} = MLE_glmfit(data, const);
 end
 

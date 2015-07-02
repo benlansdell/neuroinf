@@ -60,7 +60,7 @@ function data = filters_sprc_stm(processed, nK_sp, nK_stm, a)
 	nS = size(processed.stim,2);
 
 	T = nK_sp*dt_sp;
-	[rcbasis, spbasis, nK_rc] = makeRCBasis(dt_sp, T);
+	[rcbasis, spbasis, nK_rc] = makeRCBasis(dt_sp, T, a);
 	nK = nK_rc + nS*nK_stm;
 
 	data.X = zeros(nB, nK);
@@ -101,10 +101,8 @@ function sphistory_rc = project_rc(sphistory, rcbasis)
 	sphistory_rc = rcbasis*sphistory;
 end
 
-function [rcbasis, spbasis, nK_rc] = makeRCBasis(dt, T)
+function [rcbasis, spbasis, nK_rc] = makeRCBasis(dt, T, a)
 	%Define basis of raised cosine functions
-	%Hard-wired log-scale
-	a = 15;
 	nTotal = floor(T/dt);
 	%Create basis function function
 	B = @(t, a, psi, phi) iif(a*log(t-psi)>phi-pi & a*log(t-psi)<phi+pi, 0.5*(cos((a*log(t-psi)-phi))+1), ...

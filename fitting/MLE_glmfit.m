@@ -61,6 +61,8 @@ function model = MLE_glmfit(data, const)
 	model.N = size(stats.resid,1);
 	stats = rmfield(stats, {'resid', 'residp', 'residd', 'resida', 'wts'});
 	model.stats{1} = stats;
+	model.nspikes(1) = sum(data.y(1,:));
+
 	%model.logli = ll(model, data, 'poisson');
 	if ~strcmp(const, 'on')
 		model.b_hat = [zeros(nU, 1), model.b_hat]

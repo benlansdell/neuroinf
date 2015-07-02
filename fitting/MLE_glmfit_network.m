@@ -39,6 +39,7 @@ function model = MLE_glmfit_network(data, const)
 	model.stats = cell(nU,1);
 	model.converged = ones(nU,1);
 	model.conditioned = ones(nU,1);
+	model.nspikes = zeros(nU,1);
 	%For each unit, fit a GLM to the torque data
 	display(['Fitting GLM by MLE with IRLS. Fitting ' num2str(nU) ' units.'])
 	for idx=1:nU 
@@ -61,6 +62,7 @@ function model = MLE_glmfit_network(data, const)
 		model.N = size(stats.resid,1);
 		stats = rmfield(stats, {'resid', 'residp', 'residd', 'resida', 'wts'});
 		model.stats{idx} = stats;
+		model.nspikes = sum(data.y(idx,:));
 	end
 	%model.logli = ll_network(model, data, 'poisson');
 	if ~strcmp(const, 'on')

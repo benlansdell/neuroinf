@@ -70,7 +70,7 @@ function plot_filters_rc(models, data, processed, fn_out)
 			h = pcolor(frame);
 			set(h, 'EdgeColor', 'none');
 			axis off
-			caxis([minbstm, maxbstm])
+			caxis([min(b_stm), max(b_stm)])
 		end
 	end
 	subplot(nM+1, nP, nP*nM+1)
@@ -92,8 +92,8 @@ function plot_filters_rc(models, data, processed, fn_out)
 		end
 		text(0.1,0.8,str1)
 	end
-	caxis([minbstm, maxbstm])
-	colorbar
+	%caxis([minbstm, maxbstm])
+	%colorbar
 
 	%save eps
 	saveplot(gcf, fn_out, 'eps', [10,30]);

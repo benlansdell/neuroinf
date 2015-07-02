@@ -6,10 +6,10 @@ fn_out = './run_glm_fitting_sprc_network_sparse.eps';
 nK_sp = 20;
 nK_stm = 6;
 const = 'on';
-binsize = 1;
+binsize = 1/30;
 a = 11;
 %As determined by optimallambda.m
-lambda = 30;
+lambda = 35;
 
 models = {};
 for idx = 1:length(responsefiles)

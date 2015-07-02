@@ -6,7 +6,7 @@ fn_out = './run_glm_fitting_sprc_a_10.eps';
 nK_sp = 20;
 nK_stm = 6;
 const = 'on';
-binsize = 1;
+binsize = 1/30;
 models = {};
 a = 10;
 

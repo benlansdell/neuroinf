@@ -1,4 +1,4 @@
-function data = filters_sprc_stm(processed, nK_sp, nK_stm)
+function data = filters_sprc_stm(processed, nK_sp, nK_stm, a)
 	%Prepare spike and stimulus data for GLM
 	%includes spike history (in raised cosine basis) and stimulus filters:
 	%
@@ -15,6 +15,8 @@ function data = filters_sprc_stm(processed, nK_sp, nK_stm)
 	%	processed = structure output from one of the preprocess functions.
 	%	nK_sp = number of timebins used for spike history filter
 	%	nK_stm = number of timebins used for stimulus filter
+	%	a = (optional, default = 15) rate of increase of spacing between successive 
+	%		basis functions
 	%   
 	%Output:
 	%	data is a structure containing the following fields:
@@ -39,6 +41,9 @@ function data = filters_sprc_stm(processed, nK_sp, nK_stm)
 	%	processed = preprocess(stimfile, rf, binsize, unit);
 	%	data = filters_sprc_stm(processed, nK_sp, nK_stm);
 
+	if nargin < 4
+		a = 15;
+	end
 
 	dt_sp = processed.binsize;
 	dt_stm = processed.binsize;

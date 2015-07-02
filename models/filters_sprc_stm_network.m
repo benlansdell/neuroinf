@@ -1,4 +1,4 @@
-function data = filters_sprc_stm_network(processed, nK_sp, nK_stm)
+function data = filters_sprc_stm_network(processed, nK_sp, nK_stm, a)
 	%Prepare spike and stim data for GLM which includes spike history and stim
 	%history filters 
 	%
@@ -17,6 +17,8 @@ function data = filters_sprc_stm_network(processed, nK_sp, nK_stm)
 	%	processed = structure output from one of the preprocess functions.
 	%	nK_sp = number of timebins used for spike history filter for all units
 	%	nK_stm = number of timebins used for stim filter
+	%	a = (optional, default = 15) rate of increase of spacing between successive 
+	%		basis functions
 	%   
 	%Output:
 	%	data is a structure containing the following fields:
@@ -35,10 +37,15 @@ function data = filters_sprc_stm_network(processed, nK_sp, nK_stm)
 	%	stimfile = './data/whitenoise.raw';
 	%	binsize = 1;
 	%	unit = 10;
-	%	nK_sp = 6;
+	%	nK_sp = 20;
 	%	nK_stm = 6;
+	%	a = 10;
 	%	processed = preprocess(stimfile, rf, binsize, unit);
-	%	data = filters_sprc_stm_network(processed, nK_sp, nK_stm);
+	%	data = filters_sprc_stm_network(processed, nK_sp, nK_stm, a);
+
+	if nargin < 4
+		a = 15;
+	end
 
 	dt_sp = processed.binsize;
 	dt_stm = processed.binsize;
@@ -52,7 +59,7 @@ function data = filters_sprc_stm_network(processed, nK_sp, nK_stm)
 	nS = size(processed.stim,2);
 
 	T = nK_sp*dt_sp;
-	[rcbasis, spbasis, nK_rc] = makeRCBasis(dt_sp, T);
+	[rcbasis, spbasis, nK_rc] = makeRCBasis(dt_sp, T, a);
 	nK = nU*nK_rc + nS*nK_stm;
 
 	data.X = zeros(nB, nK);
@@ -97,10 +104,11 @@ function sphistory_rc = project_rc(sphistory, rcbasis)
 	sphistory_rc = rcbasis*sphistory;
 end
 
-function [rcbasis, spbasis, nK_rc] = makeRCBasis(dt, T)
+function [rcbasis, spbasis, nK_rc] = makeRCBasis(dt, T, a)
 	%Define basis of raised cosine functions
-	%Hard-wired log-scale
-	a = 15;
+	if nargin < 3
+		a = 15;
+	end
 	nTotal = floor(T/dt);
 	%Create basis function function
 	B = @(t, a, psi, phi) iif(a*log(t-psi)>phi-pi & a*log(t-psi)<phi+pi, 0.5*(cos((a*log(t-psi)-phi))+1), ...

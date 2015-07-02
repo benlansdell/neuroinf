@@ -1,7 +1,8 @@
-function [rcbasis, spbasis, nK_rc] = makeRCBasis(dt, T)
+function [rcbasis, spbasis, nK_rc] = makeRCBasis(dt, T, a)
 	%Define basis of raised cosine functions
-	%Hard-wired log-scale
-	a = 15;
+	if nargin < 3
+		a = 15;
+	end
 	nTotal = floor(T/dt);
 	%Create basis function function
 	B = @(t, a, psi, phi) iif(a*log(t-psi)>phi-pi & a*log(t-psi)<phi+pi, 0.5*(cos((a*log(t-psi)-phi))+1), ...

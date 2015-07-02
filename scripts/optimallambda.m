@@ -26,7 +26,7 @@ for l = 1:length(lambdas)
 		training.stim = training.stim(1:35000,:);
 		%Fit model to training
 		data = filters_sprc_stm_network(training, nK_sp, nK_stm, a);
-		models{l,idx} = MLE_SD_reg(data, lambda, const);
+		models{l,idx} = MLE_SD_rc_reg(data, lambda, const);
 		%Find deviance on test dataset
 		processed.spikes = processed.spikes(35001:70000,:);
 		processed.stim = processed.stim(35001:70000,:);

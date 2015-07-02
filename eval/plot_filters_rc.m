@@ -24,6 +24,9 @@ function plot_filters_rc(models, data, processed, fn_out)
 	%	plot_filters_rc(model, data, processed, fn_out);
 
 	nM = length(models);
+	nK_stm = data.nK_stm;
+	nU = 1;
+
 	%Test run
 	%nM = 3;
 	clf;
@@ -39,6 +42,28 @@ function plot_filters_rc(models, data, processed, fn_out)
 		maxbstm = max(maxbstm, max(b_stm));
 		minbstm = min(minbstm, min(b_stm));
 	end
+
+	%Prepare subplots
+	plotheight=nM+3;
+	plotwidth=8;
+	subplotsx=nU+nK_stm+1;
+	subplotsy=nM+1;   
+	leftedge=1.2;
+	rightedge=0.4;   
+	topedge=1;
+	bottomedge=1.5;
+	spacex=0.2;
+	spacey=0.2;
+	fontsize=5;    
+	sub_pos=subplot_pos(plotwidth,plotheight,leftedge,rightedge,bottomedge,topedge,subplotsx,subplotsy,spacex,spacey);
+
+	%setting the Matlab figure
+	f=figure;
+	clf(f);
+	set(gcf, 'PaperUnits', 'centimeters');
+	set(gcf, 'PaperSize', [plotwidth plotheight]);
+	set(gcf, 'PaperPositionMode', 'manual');
+	set(gcf, 'PaperPosition', [0 0 plotwidth plotheight]);
 
 	for idx = 1:nM
 		idx
@@ -56,16 +81,25 @@ function plot_filters_rc(models, data, processed, fn_out)
 		nX = length(stmidx)/nK_stm;
 		Nv = processed.Nv;
 		nP = 1 + nK_stm;
-		subplot(nM+1,nP,(nP*(idx-1)+1))
+		%subplot(nM+1,nP,(nP*(idx-1)+1))
+		ax=axes('position',sub_pos{1,nM+1-idx},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
+		axis off
+		str1(1) = {['Unit ' num2str(idx)]};
+		str1(2) = {['# spikes:']};
+		str1(3) = {[num2str(model.nspikes)]};
+		text(0,0.8,str1)
+
+		ax=axes('position',sub_pos{2,nM+1-idx},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
+
 		if model.converged & model.conditioned
-			plot(b_sphist)
+			plot(processed.binsize*((1:length(b_sphist))-length(b_sphist)-1), b_sphist)
 		else
-			plot(b_sphist, '--')
+			plot(processed.binsize*((1:length(b_sphist))-length(b_sphist)-1), b_sphist, '--')
 		end
 		%ylabel('spike history')
 		colormap(pink);
 		for j = 1:nK_stm
-			subplot(nM+1,nP,(nP*(idx-1)+1+j))
+			ax=axes('position',sub_pos{2+j,nM+1-idx},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
 			frame = reshape(b_stm(nX*(j-1)+1:nX*j), Nv, []);
 			h = pcolor(frame);
 			set(h, 'EdgeColor', 'none');
@@ -73,7 +107,7 @@ function plot_filters_rc(models, data, processed, fn_out)
 			caxis([min(b_stm), max(b_stm)])
 		end
 	end
-	subplot(nM+1, nP, nP*nM+1)
+	ax=axes('position',sub_pos{1,nM+1},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
 	axis off
 	str1(1) = {['Spike history']};
 	str1(2) = {['Solid=conv,cond']};
@@ -82,7 +116,7 @@ function plot_filters_rc(models, data, processed, fn_out)
 
 	for idx = 1:nK_stm
 		str1 = {};
-		subplot(nM+1, nP, nP*nM+1+idx)
+		ax=axes('position',sub_pos{2+idx,nM+1},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
 		axis off
 		if idx == 1
 			str1(1) = {'Stimulus'};
@@ -96,7 +130,7 @@ function plot_filters_rc(models, data, processed, fn_out)
 	%colorbar
 
 	%save eps
-	saveplot(gcf, fn_out, 'eps', [10,30]);
+	saveplot(gcf, fn_out, 'eps', [plotwidth, plotheight]);
 end
 
 

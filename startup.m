@@ -11,6 +11,7 @@ addpath([homedir 'lansdell/projects/neuroinf/eval']);
 addpath([homedir 'lansdell/projects/neuroinf/fitting']);
 addpath([homedir 'lansdell/projects/neuroinf/preprocess']);
 addpath([homedir 'lansdell/projects/neuroinf/models']);
+addpath([homedir 'lansdell/projects/neuroinf/scripts']);
 addpath_recurse([homedir 'lansdell/projects/neuroinf/code']);
 
 

@@ -29,8 +29,8 @@ gg.couplednums = [];
 % === Make temporal basis for stimulus filter =======================
 [nkt,nkx] = size(sta);
 % % ----- Set up temporal basis for stimulus kernel -----------
-kbasprs.neye = nkt ; % 5 ; % Number of "identity" basis vectors near time of spike;
-kbasprs.ncos = 0 ; % 5; % Number of raised-cosine vectors to use  
+kbasprs.neye = 5; % Number of "identity" basis vectors near time of spike;
+kbasprs.ncos = 5; % Number of raised-cosine vectors to use  
 kbasprs.kpeaks = [0 round(nkt/3)];  % Position of first and last bump (relative to identity bumps)
 kbasprs.b = 3; % Offset for nonlinear scaling (larger -> more linear)
 ktbas = makeBasis_StimKernel(kbasprs,nkt);
@@ -72,7 +72,7 @@ if (nargin >= 3)
             if length(iht) ~= length(glmstruct.iht)
                 error('mismatch between iht and h-kernel params ihbasprs');
             end
-            if size(glmstruct.ih,2)>1 && (nargin < 4)
+            if size(glmstruct.ih,2)>1 & (nargin < 4)
                 error('multi-cell glm struct passed in without cell # to fit');
             end
 

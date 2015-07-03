@@ -1,17 +1,19 @@
-function [model, intermediates] = MLE_SD_reg(data, lambda, const)
-	%Fit GLM to spike data from blackrock recording file for each unit above a specified threshold using fminunc
-	%	Model includes a penalty term for complexity in the network filters
-	%	Weighted by parameter lambda.
+function model = MLE_SD_reg(data, lambda, const)
+	%Fit GLM using fminunc
+	%	Model includes a penalty term for complexity in the network filters taken
+	%	from Pillow et al 2008 Nature -- weighted by parameter lambda.
 	%     
 	%Input:
 	%	data = covariate data output structure from any function in ./models
-	%	lambda = weight for 
+	%	lambda = weight for filter complexity penalty
 	%	const = (optional, default = 'on') whether to fit a constant term to the model or not, 'on' or 'off'
 	%   
 	%Output:
 	%	model is a structure containing the following fields:
-	%		b_hat = [nU x (nK + 1)] array with spikes from all channels binned according to binsize. nB = no. bins, nU = no. units.
-	%			Note: if a constant term is not fit, a column of zeros is appended to b_hat to make dimensions consistent
+	%		b_hat = [nU x (nK + 1)] array of estimated filter coefficients. Refer
+	%			to input 'data' structure for identity of each param.
+	%			Note: if a constant term is not fit, a column of zeros is appended 
+	%			to b_hat to make dimensions consistent
 	%		dev = [nU x 1] cell array listing deviance of each unit's fit
 	%		stats = [nU x 1] cell array listing fitting statistics output from glmfit
 	%

@@ -1,5 +1,5 @@
 function plot_filters_rc_network(models, data, processed, fn_out)
-	%Plot filters of a fitted GLM model, along with other fit statistics
+	%Plot filters of a fitted network GLM model, along with other fit statistics
 	%     
 	%Input:
 	%	model = data structure output by function in ./fitting (containing fitted coefficients)

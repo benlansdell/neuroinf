@@ -1,5 +1,6 @@
 function dev = deviance_network(model, data)
-	%Compute deviance of a set of data points given a set of fitted coefficients. The deviance is given by:
+	%Compute deviance of a set of data points given a set of fitted coefficients.
+	%The deviance is given by:
 	%
 	%	D(y,mu) = 2\sum y_i ln (y_i / \mu_i) - y_i + \mu_i
 	%

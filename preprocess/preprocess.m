@@ -5,10 +5,6 @@ function processed = preprocess(stimfile, responsefiles, binsize, unit)
 	%Usage:
 	%		processed = preprocess(stimfile, responsefile, binsize, unit)
 	%	
-	%Input:
-	%		nevfile = .nev file to process. For loading torque data, assumes that
-	%			an .nsx file of the same name and location exists.
-	%	
 	%Output:
 	%		processed is a structure containing the following fields:
 	%			spikes = [nB x nU] array with spikes from all channels binned 

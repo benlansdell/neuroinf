@@ -301,7 +301,7 @@ case {'poisson' 'gamma' 'inverse gaussian'}
 end
 
 while iter <= iterLim
-    iter = iter+1
+    iter = iter+1;
 
     % Compute adjusted dependent variable for least squares fit
     deta = dlinkFun(mu);

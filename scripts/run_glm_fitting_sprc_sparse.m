@@ -15,7 +15,7 @@ lambda = 30;
 for idx = 1:length(responsefiles)
 	display(['Fitting unit ' num2str(idx)])
 	rf = responsefiles(idx);
-	processed = preprocess(stimfile, rf, binsize, idx);
+	processed = preprocess(stimfile, rf, binsize, 1);
 	data = filters_sprc_stm(processed, nK_sp, nK_stm, a);
 	models{idx} = MLE_SD_rc_reg(data, lambda, const);
 end

@@ -13,7 +13,7 @@ models = {};
 for idx = 1:length(responsefiles)
 	display(['Fitting unit ' num2str(idx)])
 	rf = responsefiles(idx);
-	processed = preprocess(stimfile, rf, binsize, idx);
+	processed = preprocess(stimfile, rf, binsize, 1);
 	data = filters_sp_stm(processed, nK_sp, nK_stm);
 	models{idx} = MLE_glmfit(data, const);
 end

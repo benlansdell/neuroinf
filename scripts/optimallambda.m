@@ -4,7 +4,7 @@
 responsefiles = {'whitenoisec1.isk', 'whitenoisec2.isk', 'whitenoisec3.isk',...
 	'whitenoisec4.isk','whitenoisec5.isk','whitenoisec6.isk'};
 stimfile = './data/whitenoise.raw';
-fn_out = './run_glm_fitting_sprc_network_sparse.eps';
+fn_out = './optimallambda.eps';
 
 nK_sp = 20;
 nK_stm = 6;

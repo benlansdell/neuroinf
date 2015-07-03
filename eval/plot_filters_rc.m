@@ -12,13 +12,13 @@ function plot_filters_rc(models, data, processed, fn_out)
 	%	responsefiles = dir('./data/*.isk');
 	%	rf = responsefiles(1:3);
 	%	stimfile = './data/whitenoise.raw';
-	%	binsize = 1;
-	%	unit = 10;
+	%	binsize = 1/30;
+	%	unitidx = 2;
 	%	nK_sp = 20;
 	%	nK_stm = 6;
 	%	const = 'on';
 	%	fn_out = './testfilters.eps';
-	%	processed = preprocess(stimfile, rf, binsize, unit);
+	%	processed = preprocess(stimfile, rf, binsize, unitidx);
 	%	data = filters_sprc_stm(processed, nK_sp, nK_stm);
 	%	model = MLE_glmfit(data, const);
 	%	plot_filters_rc(model, data, processed, fn_out);
@@ -84,7 +84,7 @@ function plot_filters_rc(models, data, processed, fn_out)
 		%subplot(nM+1,nP,(nP*(idx-1)+1))
 		ax=axes('position',sub_pos{1,nM+1-idx},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
 		axis off
-		str1(1) = {['Unit ' num2str(idx)]};
+		str1(1) = {['Unit ' num2str(processed.unitnames{idx})]};
 		str1(2) = {['# spikes:']};
 		str1(3) = {[num2str(model.nspikes)]};
 		text(0,0.8,str1)

@@ -12,13 +12,13 @@ function plot_filters_rc_network(models, data, processed, fn_out)
 	%	responsefiles = dir('./data/*.isk');
 	%	rf = responsefiles(1:3);
 	%	stimfile = './data/whitenoise.raw';
-	%	binsize = 1;
-	%	unit = 10;
+	%	binsize = 1/30;
+	%	unitidx = 2;
 	%	nK_sp = 20;
 	%	nK_stm = 6;
 	%	const = 'on';
 	%	fn_out = './testfilters.eps';
-	%	processed = preprocess(stimfile, rf, binsize, unit);
+	%	processed = preprocess(stimfile, rf, binsize, unitidx);
 	%	data = filters_sprc_stm_network(processed, nK_sp, nK_stm);
 	%	model = MLE_glmfit(data, const);
 	%	plot_filters_rc_network(models, data, processed, fn_out);

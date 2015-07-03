@@ -32,11 +32,11 @@ function data = filters_sprc_stm(processed, nK_sp, nK_stm, a)
 	%	responsefiles = dir('./data/*.isk');
 	%	rf = responsefiles(1:3);
 	%	stimfile = './data/whitenoise.raw';
-	%	binsize = 1;
-	%	unit = 10;
+	%	binsize = 1/30;
+	%	unitidx = 2;
 	%	nK_sp = 6;
 	%	nK_stm = 6;
-	%	processed = preprocess(stimfile, rf, binsize, unit);
+	%	processed = preprocess(stimfile, rf, binsize, unitidx);
 	%	data = filters_sprc_stm(processed, nK_sp, nK_stm);
 
 	if nargin < 4

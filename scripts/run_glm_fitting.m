@@ -1,5 +1,6 @@
 responsefiles = struct2cell(dir('./data/*.isk'));
 responsefiles = responsefiles(1,:);
+responsefiles = sortnumerical(responsefiles);
 stimfile = './data/whitenoise.raw';
 fn_out = './run_glm_fitting_sp.eps';
 
@@ -11,10 +12,7 @@ models = {};
 
 for idx = 1:length(responsefiles)
 	display(['Fitting unit ' num2str(idx)])
-	%Find the idx of the idxth file
-	unit = find(cellfun(@(x) ~isempty(findstr(x, ['sec' num2str(idx) '.isk'])),...
-	 responsefiles));
-	rf = responsefiles(unit);
+	rf = responsefiles(idx);
 	processed = preprocess(stimfile, rf, binsize, idx);
 	data = filters_sp_stm(processed, nK_sp, nK_stm);
 	models{idx} = MLE_glmfit(data, const);

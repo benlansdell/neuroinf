@@ -2,12 +2,6 @@ function data = filters_sprc_stm(processed, nK_sp, nK_stm, a)
 	%Prepare spike and stimulus data for GLM
 	%includes spike history (in raised cosine basis) and stimulus filters:
 	%
-	%	y(i) ~ Pn(g(eta_i))
-	%
-	%where
-	%
-	%	eta_i = \sum y(i-j) k_y(i) + \sum x(i-j) k_x(j)
-	%
 	%Usage:
 	%	data = filters_sp_stm(processed, nK_sp, nK_stm, dt_sp, dt_stm)
 	%     
@@ -20,15 +14,19 @@ function data = filters_sprc_stm(processed, nK_sp, nK_stm, a)
 	%   
 	%Output:
 	%	data is a structure containing the following fields:
-	%		y = [nU x nB] array where y_ij is the number of spikes at time bin j
-	%			for unit i.
-	%		X = [nU x nB x nK] array where X_ijk is the value of covariate k, at
-	%			time bin j, for unit i. Note: nK = nK_sp + nK_stm
-	%		k = Names of each filter, a [n x 2] cell array in which each row is 
-	%			of the form ['filter j name', [idxj1 idxj2 ...]] 
-	%			Note: The second column lists indices in 1:nK to which the label
-	%			applies
+	%		y = [1 x nB] array where y_i is the number of spikes at time bin i
+	%		X = [nB x nK] array where X_ij is the value of covariate j, at
+	%			time bin i. Note: nK = nK_sp + nK_stm
+	%		k = Names of each filter, a [n x 3] cell array in which each row is 
+	%			of the form
+	%				['filter j name', [idxj1 idxj2 ...], binsize] 
+	%			where the second column lists indices in 1:nK which belong to the
+	%			filter, the third column indicates the temporal resultion that filter
+	%			runs at
 	%		stim = stim data trimmed in the same way X and y are. 
+	%		sp_hist = indices corresponding to (auto) spike history terms
+	%		nK_sp = number of spike history components
+	%		nK_stm = number of stimulus components
 	%
 	%Test code:
 	%	responsefiles = dir('./data/*.isk');

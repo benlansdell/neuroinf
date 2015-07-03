@@ -1,14 +1,5 @@
 function data = filters_sp_stm_network(processed, nK_sp, nK_stm)
-	%Prepare spike and stim data for GLM which includes spike history and stim
-	%history filters 
-	%
-	%	y(i) ~ Pn(g(eta_i))
-	%
-	%where
-	%
-	%	eta_i = \sum y(i-j) k_sp(i) + \sum x_1(i+j) k_1(j) + \sum x_2(i+j) k_2(j)
-	%
-	%Spike history filter is saved as a rasied cosine function coefficients
+	%Prepare spike and stim data for network GLM
 	%
 	%Usage:
 	%	data = filters_sp_stm_network(processed, nK_sp, nK_stm)
@@ -20,14 +11,19 @@ function data = filters_sp_stm_network(processed, nK_sp, nK_stm)
 	%   
 	%Output:
 	%	data is a structure containing the following fields:
-	%		y = [nU x nB] array where y_ij is the number of spikes at time bin j 
-	%			for unit i.
-	%		X = [nB x nK] array where X_ijk is the value of covariate k, at time
-	%			bin j, for unit i
-	%			Note: nK = nU*nK_sp + 2*nK_pos
-	%		k = Names of each filter, a [n x 2] cell array in which each row is 
-	%			of the form ['filter j name', [idxj1 idxj2 ...]]
-	%			Note: The second column lists indices in 1:nK to which the label applies
+	%		y = [1 x nB] array where y_i is the number of spikes at time bin i
+	%		X = [nB x nK] array where X_ij is the value of covariate j, at
+	%			time bin i. Note: nK = nK_sp + nK_stm
+	%		k = Names of each filter, a [n x 3] cell array in which each row is 
+	%			of the form
+	%				['filter j name', [idxj1 idxj2 ...], binsize] 
+	%			where the second column lists indices in 1:nK which belong to the
+	%			filter, the third column indicates the temporal resultion that filter
+	%			runs at
+	%		stim = stim data trimmed in the same way X and y are. 
+	%		sp_hist = indices corresponding to (auto) spike history terms
+	%		nK_sp = number of spike history components
+	%		nK_stm = number of stimulus components
 	%  
 	%Test code:
 	%	responsefiles = dir('./data/*.isk');

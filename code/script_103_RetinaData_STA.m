@@ -17,8 +17,9 @@
 %  model is also computed. 
 
 clear ; 
-cd('/Users/Shared/MANUSCRIPTS/Adrienne_Yonitan/Retinal_data') %DK files
+%cd('/Users/Shared/MANUSCRIPTS/Adrienne_Yonitan/Retinal_data') %DK files
 %cd('/home/aljadeff/Documents/MATLAB/neuroinfo_retina/data') %YA files
+cd('/home/lansdell/projects/neuroinf/data') %BL files
 
 stim_length = {'short','long'} ;
 

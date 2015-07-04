@@ -84,7 +84,8 @@ function plot_filters_rc(models, data, processed, fn_out)
 		%subplot(nM+1,nP,(nP*(idx-1)+1))
 		ax=axes('position',sub_pos{1,nM+1-idx},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
 		axis off
-		str1(1) = {['Unit ' num2str(processed.unitnames{idx})]};
+		%str1(1) = {['Unit ' num2str(processed.unitnames{idx})]};
+		str1(1) = {['Unit ' num2str(idx)]};
 		str1(2) = {['# spikes:']};
 		str1(3) = {[num2str(model.nspikes)]};
 		text(0,0.8,str1)

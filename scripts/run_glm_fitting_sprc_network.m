@@ -14,7 +14,7 @@ for idx = 1:length(responsefiles)
 	display(['Fitting unit ' num2str(idx)])
 	processed = preprocess(stimfile, responsefiles, binsize, idx);
 	data = filters_sprc_stm_network(processed, nK_sp, nK_stm);
-	models{idx} = MLE_glmfit_network(data, const);
+	models{idx} = MLE_glmfit(data, const);
 end
 
 %Save models, and other data

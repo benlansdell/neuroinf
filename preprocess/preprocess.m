@@ -87,3 +87,4 @@ function processed = preprocess(stimfile, responsefiles, binsize, unitidx)
     processed.spikes = processed.spikes(1:end-maxlag,:);
     processed.unitidx = unitidx;
     processed.unitnames = unitnames;
+

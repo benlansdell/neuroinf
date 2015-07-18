@@ -1,6 +1,11 @@
 clear ;
-cd('/Users/Shared/MANUSCRIPTS/Adrienne_Yonitan/Retinal_data') %DK files
+%cd('/Users/Shared/MANUSCRIPTS/Adrienne_Yonitan/Retinal_data') %DK files
 %cd('/home/aljadeff/Documents/MATLAB/neuroinfo_retina/data') %YA files
+cd('/home/lansdell/projects/neuroinf/data') %BL files
+
+pltpath = '/home/lansdell/projects/neuroinf/plots/';
+plotwidth = 8;
+plotheight = 8;
 
 stim_length = {'short','long'} ;
 
@@ -11,7 +16,7 @@ fntsz = 15 ;
 
 for icell = 1:53
     for iL = 1:2
-
+        fn_out = [pltpath '/Retina_cell_' num2str(icell) '_glm_' stim_length{iL} '.eps'];
         load(['Retina_cell_' num2str(icell) '_glm_' stim_length{iL} '.mat']) ;
         load(['Retina_cell_' num2str(icell) '_sta_' stim_length{iL} '.mat']) ;
         
@@ -39,5 +44,6 @@ for icell = 1:53
         legend('GLM spike history filter') ;
         xlabel('time relative to spike (s)') ;
         set(gca,'FontSize',fntsz) ;
+        saveplot(gcf, fn_out, 'eps', [plotwidth plotheight]);
     end
 end

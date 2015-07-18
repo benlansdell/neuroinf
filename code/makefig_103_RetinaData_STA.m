@@ -1,6 +1,11 @@
 clear;
-cd('/Users/Shared/MANUSCRIPTS/Adrienne_Yonitan/Retinal_data') %DK files
+%cd('/Users/Shared/MANUSCRIPTS/Adrienne_Yonitan/Retinal_data') %DK files
 %cd('/home/aljadeff/Documents/MATLAB/neuroinfo_retina/data') %YA files
+cd('/home/lansdell/projects/neuroinf/data') %BL files
+
+pltpath = '/home/lansdell/projects/neuroinf/plots/';
+plotwidth = 5;
+plotheight = 5;
 
 stim_length = {'short','long'} ;
 sr = 30 ;
@@ -10,6 +15,7 @@ for icell = 1:53
     figure ; 
         
     for iL = 1:2
+        fn_out = [pltpath '/Retina_cell_' num2str(icell) '_sta_' stim_length{iL} '.eps'];
         load(['Retina_cell_' num2str(icell) '_sta_' stim_length{iL} '.mat']) ;
         load(['RetinaCellParameters_' stim_length{iL} '.mat']) ;
         
@@ -34,5 +40,6 @@ for icell = 1:53
         end
         colormap hot;
         axis image xy off ;
+        saveplot(gcf, fn_out, 'eps', [plotwidth plotheight]);
      end
 end    

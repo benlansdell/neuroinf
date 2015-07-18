@@ -4,7 +4,7 @@ responsefiles = sortnumerical(responsefiles);
 stimfile = './data/whitenoise.raw';
 fn_out = './run_glm_fitting_sprc_sparse.eps';
 
-nK_sp = 20;
+nK_sp = 6;
 nK_stm = 6;
 const = 'on';
 binsize = 1/30;

@@ -66,9 +66,12 @@ function data = filters_sp_stm(processed, nK_sp, nK_stm)
 	for j = (nK_sp*steps_sp+1:nB)
 		%(past) spike history
 		shist = processed.spikes(j-nK_sp*steps_sp:steps_sp:j-steps_sp, unit);
+		%(past and present) stimulus
+		stim = processed.stim(j-(nK_stm-1)*steps_stm:steps_stm:j,:);
 		%(past) stimulus
-		stim = processed.stim(j-nK_stm*steps_stm:steps_stm:j-steps_stm,:);
+		%stim = processed.stim(j-nK_stm*steps_stm:steps_stm:j-steps_stm,:);
 		stim = reshape(squeeze(stim)', 1, []);
+		%stim = rand(size(stim));
 		%Form stim vector
 		data.X(j,:) = [shist' stim];
 	end

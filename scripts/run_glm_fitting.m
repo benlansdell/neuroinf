@@ -2,9 +2,9 @@ responsefiles = struct2cell(dir('./data/*.isk'));
 responsefiles = responsefiles(1,:);
 responsefiles = sortnumerical(responsefiles);
 stimfile = './data/whitenoise.raw';
-fn_out = './run_glm_fitting_sp.eps';
+fn_out = './run_glm_fitting_sp_presentstim.eps';
 
-nK_sp = 20;
+nK_sp = 6;
 nK_stm = 6;
 const = 'on';
 binsize = 1;
@@ -21,5 +21,5 @@ end
 %Save models, and other data
 data = rmfield(data, {'X', 'y'});
 processed = rmfield(processed, {'stim', 'spikes'});
-save('./run_glm_fitting_sp.mat', 'models', 'data', 'processed')
+save('./run_glm_fitting_sp_presentstim.mat', 'models', 'data', 'processed')
 plot_filters(models, data, processed, fn_out);

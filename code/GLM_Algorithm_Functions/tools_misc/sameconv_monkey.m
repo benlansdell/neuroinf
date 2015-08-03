@@ -12,5 +12,9 @@ function G = sameconv(A, B);
 nn = am+bm-1;
 
 G = ifft(sum(fft(A,nn).*fft(flipud(B),nn),2));
-%G = G(1:am,:);
-G = G(end-am+1:end,:);
+%This will make stim before stim
+%Gb = G(1:am,:);
+%This will make 'stim' after spikes
+%Ga = G(end-am+1:end,:);
+%This will make 'stim' half before, half after spikes
+G = G(ceil(bm/2)+1:ceil(bm/2)+am,:);

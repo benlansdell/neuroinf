@@ -26,6 +26,10 @@ function processed = preprocess_monkey(datafile, binsize, unitidx)
 	%	unitidx = 13;
 	%	processed = preprocess_monkey(datafile, binsize, unitidx);
 
+	%Event legend
+	TRIALSTART = 10;
+	TRIALEND = 15;
+
     load(datafile) ;
     processed.binsize = binsize;
     processed.cursor = [Cursor_X, Cursor_Y, Cursor_Z];
@@ -35,18 +39,34 @@ function processed = preprocess_monkey(datafile, binsize, unitidx)
     processed.unitidx = unitidx;
     nU = length(unitnames);
     nB = size(processed.cursor,1);
-    nB = ceil(nB/3);
+    %nB = ceil(nB/3);
     processed.spikes = zeros(nB, nU);
     for idx = 1:nU
     	%Get data for idxth spike train
     	eval(['spikes = ' unitnames{idx} ';']);
-    	%Bin in processed.spikes matrix @ 30Hz
-    	bins = ceil(spikes/30);
+    	%Bin in processed.spikes matrix @ 100Hz
+    	bins = ceil(spikes/10);
     	for b = bins
 	    	processed.spikes(b, idx) = processed.spikes(b, idx) + 1;
 		end
 	end
 
-	%Resample at 30Hz
-	processed.grip = resample(processed.grip, 1, 3);
-	processed.cursor = resample(processed.cursor, 1, 3);
+	%Note which bins are inside a trial
+	trialstartidx = find(Events_Data(2,:)==TRIALSTART);
+	trialendidx = find(Events_Data(2,:)==TRIALEND);
+	trialstartbins = ceil(Events_Data(1,trialstartidx)/10);
+	trialendbins = ceil(Events_Data(1,trialendidx)/10);
+	trialchanges = zeros(size(processed.grip));
+	trialchanges(trialstartbins) = 1;
+	trialchanges(trialendbins) = -1;
+	processed.intrial = cumsum(trialchanges);
+
+	%Remove start of recording, since cursor and grip are zero
+	startidx = find(processed.grip>0,1);
+	processed.cursor = processed.cursor(startidx:end,:);
+	processed.grip = processed.grip(startidx:end,:);
+	processed.spikes = processed.spikes(startidx:end,:);
+	processed.intrial = processed.intrial(startidx:end,:);
+	%Start outside of of a trial
+	processed.intrial(1) = 0;
+	processed.trialstartend = [trialstartbins'-startidx+1, trialendbins'-startidx+1];

@@ -63,6 +63,7 @@ function processed = preprocess_monkey(datafile, binsize, unitidx)
 
 	%Remove start of recording, since cursor and grip are zero
 	startidx = find(processed.grip>0,1);
+	processed.startidx = startidx;
 	processed.cursor = processed.cursor(startidx:end,:);
 	processed.grip = processed.grip(startidx:end,:);
 	processed.spikes = processed.spikes(startidx:end,:);

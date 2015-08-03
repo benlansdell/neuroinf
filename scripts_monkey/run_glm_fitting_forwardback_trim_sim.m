@@ -15,19 +15,79 @@ fn_out = './monkeyresults/run_glm_fitting_sp_100Hz_fwdrev_trim_80pt.eps';
 processed = preprocess_monkey(datafile, binsize, 1);
 nB = size(processed.cursor,1);
 
+
+sigma_fr = .25;
+sigma_fr = sigma_fr*samplerate;
+sz = sigma_fr*3*2;
+x = linspace(-sz/2, sz/2, sz);
+gaussFilter1 = exp(-x.^2/(2*sigma_fr^2));
+gaussFilter1 = gaussFilter1/sum(gaussFilter1);
+
+sigma_fr = .02;
+sigma_fr = sigma_fr*samplerate;
+sz = sigma_fr*3*2;
+x = linspace(-sz/2, sz/2, sz);
+gaussFilter2 = exp(-x.^2/(2*sigma_fr^2));
+gaussFilter2 = gaussFilter2/sum(gaussFilter2);
+
 %Fit and simulate
 for idx = 1:nU
+	%Test run
+	idx = 7;
 	processed.unitidx = idx;
-	data = filters_monkey_sprc_stmrev_trim(processed, nK_sp, nK_stm, a, dt_sp, dt_stm);
+	data = filters_monkey_sprc_stmrev_trim(processed, 0, nK_stm, a, dt_sp, dt_stm);
 	[data, testdata] = splitforCV(data, percentage);
 	models{idx} = MLE_glmfit(data, const);
+	%models{idx}.b_hat(2:11) = models{idx}.b_hat(2:11)-0.05;
 	%Simulate
-	%sptrain = zeros(size(testdata.y,2), 1);
-	%for j = 1:nRep
-	%	sptrain = sptrain + glmsim(processed, models{idx}, testdata, 1);
-	%end
-	%sptrain = sptrain/nRep;
-	%simtrains{idx} = sptrain;
+	sptrain = zeros(size(testdata.y,2), 1);
+	nRep = 10;
+	for j = 1:nRep
+		j
+		sptrain = sptrain + glmsim_rc(processed, models{idx}, testdata, 1);
+	end
+	sptrain = sptrain/nRep;
+	simtrains{idx} = sptrain;
+
+	clf
+	tstart = 1;
+	tend = 8000;
+	unitidx = idx;
+	tidx = tstart:tend;
+	truesp = testdata.y(1,tidx);
+	simsp = simtrains{unitidx}(tidx);
+	subplot(2,1,1)
+	plot(tidx*processed.binsize, 50*testdata.grip(tidx), tidx*processed.binsize, testdata.cursor(tidx,1),...
+		tidx*processed.binsize, testdata.cursor(tidx,2), tidx*processed.binsize, testdata.cursor(tidx,3));	
+	xlabel('s')
+	legend('Grip', 'Curs x', 'Curs y', 'Curs z')
+	subplot(2,1,2)
+	gftruesp = conv(truesp, gaussFilter1, 'same');
+	gfsimsp = conv(simsp, gaussFilter1, 'same');
+	plot(tidx*processed.binsize, gftruesp, '.', tidx*processed.binsize, gfsimsp);
+	xlabel('s')
+	ylabel('Pred prob spiking')
+	saveplot(gcf, [fn_out '_sim']);
+
+	clf
+	tstart = 2000;
+	tend = 3000;
+	unitidx = idx;
+	tidx = tstart:tend;
+	truesp = testdata.y(1,tidx);
+	simsp = simtrains{unitidx}(tidx);
+	subplot(2,1,1)
+	plot(tidx*processed.binsize, 50*testdata.grip(tidx), tidx*processed.binsize, testdata.cursor(tidx,1),...
+		tidx*processed.binsize, testdata.cursor(tidx,2), tidx*processed.binsize, testdata.cursor(tidx,3));	
+	xlabel('s')
+	legend('Grip', 'Curs x', 'Curs y', 'Curs z')
+	subplot(2,1,2)
+	gftruesp = conv(truesp, gaussFilter2, 'same');
+	spidx = truesp > 0;
+	gfsimsp = conv(simsp, gaussFilter2, 'same');
+	plot(tidx(spidx)*processed.binsize, 0.1, 'rx', tidx*processed.binsize, gfsimsp);
+	ylabel('Pred prob spiking')
+	saveplot(gcf, [fn_out '_simzoom']);
 end
 plot_filters_rc_monkey(models, data, processed, fn_out);
 
@@ -36,27 +96,3 @@ data = rmfield(data, {'X', 'y'});
 processed = rmfield(processed, {'cursor', 'grip', 'spikes'});
 %save('./monkeyresults/run_glm_fitting_sp_100Hz_forwardback_trim_80pt.mat', 'models', 'data', 'processed', 'simtrains', 'nRep')
 save('./monkeyresults/run_glm_fitting_sp_100Hz_forwardback_trim_80pt.mat', 'models', 'data', 'processed')
-
-%Plot the simulated spike trains... 
-%sigma_fr = .25;
-%sigma_fr = sigma_fr*samplerate;
-%sz = sigma_fr*3*2;
-%x = linspace(-sz/2, sz/2, sz);
-%gaussFilter_fr = exp(-x.^2/(2*sigma_fr^2));
-%gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
-
-%clf
-%tstart = 1;
-%tend = 8000;
-%unitidx = 4;
-%tidx = tstart:tend;
-%truesp = processedtest.spikes(tidx,unitidx);
-%simsp = simtrains{unitidx}(tidx);
-%%subplot(2,1,1)
-%%plot(tidx*processed.binsize, truesp);
-%
-%%subplot(2,1,2)
-%gftruesp = conv(truesp, gaussFilter_fr, 'same');
-%gfsimsp = conv(simsp, gaussFilter_fr, 'same');
-%plot(tidx*processed.binsize, gftruesp, '.', tidx*processed.binsize, gfsimsp);
-%saveplot(gcf, [fn_out '_sim']);

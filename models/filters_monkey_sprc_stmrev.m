@@ -1,8 +1,8 @@
-function data = filters_monkey_sp_stm_network(processed, nK_sp, nK_stm, a, dt_sp, dt_stm)
+function data = filters_monkey_sprc_stm(processed, nK_sp, nK_stm, a, dt_sp, dt_stm)
 	%Prepare spike and stimulus data for GLM
 	%
 	%Usage:
-	%	data = filters_monkey_sp_stm_network(processed, nK_sp, nK_stm)
+	%	data = filters_monkey_sp_stm(processed, nK_sp, nK_stm)
 	%     
 	%Input:
 	%	processed = structure output from one of the preprocess functions.
@@ -39,7 +39,7 @@ function data = filters_monkey_sp_stm_network(processed, nK_sp, nK_stm, a, dt_sp
 	%	dt_stm = 5/100;
 	%	unitidx = 13;
 	%	processed = preprocess_monkey(datafile, binsize, unitidx);
-	%	data = filters_monkey_sprc_stm_network(processed, nK_sp, nK_stm, a, dt_sp, dt_stm);
+	%	data = filters_monkey_sprc_stm(processed, nK_sp, nK_stm, a, dt_sp, dt_stm);
 
 	if (nargin < 4) a = 15; end
 	if (nargin < 5) dt_sp = processed.binsize; end
@@ -55,54 +55,51 @@ function data = filters_monkey_sp_stm_network(processed, nK_sp, nK_stm, a, dt_sp
 	[rcbasis, spbasis, nK_rc] = makeRCBasis(dt_sp, T, a);
 
 	nB = size(processed.spikes,1);
-	nU = size(processed.spikes,2);
+	nU = 1;
 	unit = processed.unitidx;
-	nK = nU*nK_rc + 4*nK_stm;
+	nKs = 2*nK_stm-1;
+	nK = nU*nK_rc + 4*nKs;
 
 	data.X = zeros(nB, nK);
 	data.k = cell(5,3);
-	for i = 1:nU
-		data.k{i,1} = ['spike unit' num2str(i)]; 
-		data.k{i,2} = (i-1)*nK_sp + (1:nK_sp);
-		data.k{i,3} = dt_sp;
-	end
-	data.k{nU+1,1} = 'curs x';
-	data.k{nU+1,2} = (1:(nK_stm)) + nU*nK_rc;
-	data.k{nU+1,3} = dt_stm;
-	data.k{nU+2,1} = 'curs y';
-	data.k{nU+2,2} = (1:(nK_stm)) + nU*nK_rc + nK_stm;
-	data.k{nU+2,3} = dt_stm;
-	data.k{nU+3,1} = 'curs z';
-	data.k{nU+3,2} = (1:(nK_stm)) + nU*nK_rc + 2*nK_stm;
-	data.k{nU+3,3} = dt_stm;
-	data.k{nU+4,1} = 'grip';
-	data.k{nU+4,2} = (1:(nK_stm)) + nU*nK_rc + 3*nK_stm;
-	data.k{nU+4,3} = dt_stm;
+	data.k{1,1} = 'spike history'; 
+	data.k{1,2} = 1:nK_rc;
+	data.k{1,3} = dt_sp;
+	data.k{2,1} = 'curs x';
+	data.k{2,2} = (1:(nKs)) + nK_rc;
+	data.k{2,3} = dt_stm;
+	data.k{3,1} = 'curs y';
+	data.k{3,2} = (1:(nKs)) + nK_rc + nKs;
+	data.k{3,3} = dt_stm;
+	data.k{4,1} = 'curs z';
+	data.k{4,2} = (1:(nKs)) + nK_rc + 2*nKs;
+	data.k{4,3} = dt_stm;
+	data.k{5,1} = 'grip';
+	data.k{5,2} = (1:(nKs)) + nK_rc + 3*nKs;
+	data.k{5,3} = dt_stm;
 	%Record specifically which indices are spike history indices for model simulation
 	data.sp_hist = data.k{1,2};
 
 	%Make stimulus vector at each timebin
-	for j = (nK_sp*steps_sp+1:nB-nK_stm*steps_stm)
-		shist = zeros(nK_rc*nU,1);
-		for idx=1:nU 
-			%(past) spike history
-			shist(((idx-1)*nK_rc+1):(idx*nK_rc)) = project_rc(processed.spikes(j-nK_sp*steps_sp:steps_sp:j-steps_sp, idx), rcbasis);
-		end
-		%(future) cursor
-		curx = processed.cursor(j:steps_stm:(j+(nK_stm-1)*steps_stm),1);
-		cury = processed.cursor(j:steps_stm:(j+(nK_stm-1)*steps_stm),2);
-		curz = processed.cursor(j:steps_stm:(j+(nK_stm-1)*steps_stm),3);
-		%(future) grip
-		grip = processed.grip(j:steps_stm:(j+(nK_stm-1)*steps_stm),1);
+	strpt = 1+max(nK_sp*steps_sp,nK_stm*steps_stm);
+	for j = (strpt:nB-nK_stm*steps_stm)
+		%(past) spike history
+		shist = project_rc(processed.spikes(j-nK_sp*steps_sp:steps_sp:j-steps_sp, unit), rcbasis);
+		%(past and future) cursor
+		curx = processed.cursor(j-(nK_stm-1)*steps_stm:steps_stm:(j+(nK_stm-1)*steps_stm),1);
+		cury = processed.cursor(j-(nK_stm-1)*steps_stm:steps_stm:(j+(nK_stm-1)*steps_stm),2);
+		curz = processed.cursor(j-(nK_stm-1)*steps_stm:steps_stm:(j+(nK_stm-1)*steps_stm),3);
+		%(past and future) grip
+		grip = processed.grip(j-(nK_stm-1)*steps_stm:steps_stm:(j+(nK_stm-1)*steps_stm),1);
 		%Form stim vector
 		data.X(j,:) = [shist' curx' cury' curz' grip'];
 	end
 
 	%Truncate to exclude start of recording where spike history isn't well defined
-	data.X = data.X((nK_sp*steps_sp+1):(nB-nK_stm*steps_stm),:);
-	data.y = processed.spikes((nK_sp*steps_sp+1):(nB-nK_stm*steps_stm), unit)';
-	data.cursor = processed.cursor((nK_sp*steps_sp+1):(nB-nK_stm*steps_stm),:); 
-	data.grip = processed.grip((nK_sp*steps_sp+1):(nB-nK_stm*steps_stm),:);
+	data.X = data.X((strpt):(nB-nK_stm*steps_stm),:);
+	data.y = processed.spikes((strpt):(nB-nK_stm*steps_stm), unit)';
+	data.cursor = processed.cursor((strpt):(nB-nK_stm*steps_stm),:); 
+	data.grip = processed.grip((strpt):(nB-nK_stm*steps_stm),:);
 
 	data.nK_sp = nK_sp; 
 	data.nK_rc = nK_rc;
@@ -110,6 +107,8 @@ function data = filters_monkey_sp_stm_network(processed, nK_sp, nK_stm, a, dt_sp
 
 	data.rcbasis = rcbasis;
 	data.spbasis = spbasis;
+
+	%Truncate to only include the trial times...
 end
 
 function sphistory_rc = project_rc(sphistory, rcbasis)

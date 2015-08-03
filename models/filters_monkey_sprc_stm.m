@@ -1,4 +1,4 @@
-function data = filters_monkey_sp_stm(processed, nK_sp, nK_stm, a, dt_sp, dt_stm)
+function data = filters_monkey_sprc_stm(processed, nK_sp, nK_stm, a, dt_sp, dt_stm)
 	%Prepare spike and stimulus data for GLM
 	%
 	%Usage:
@@ -39,7 +39,7 @@ function data = filters_monkey_sp_stm(processed, nK_sp, nK_stm, a, dt_sp, dt_stm
 	%	dt_stm = 5/100;
 	%	unitidx = 13;
 	%	processed = preprocess_monkey(datafile, binsize, unitidx);
-	%	data = filters_monkey_sprc_stm(processed, nK_sp, nK_stm, dt_sp, dt_stm);
+	%	data = filters_monkey_sprc_stm(processed, nK_sp, nK_stm, a, dt_sp, dt_stm);
 
 	if (nargin < 4) a = 15; end
 	if (nargin < 5) dt_sp = processed.binsize; end

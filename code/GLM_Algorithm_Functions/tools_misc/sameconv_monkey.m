@@ -10,7 +10,7 @@ function G = sameconv(A, B);
 [am, an] = size(A);
 [bm, bn] = size(B);
 nn = am+bm-1;
-size(A)
-size(B)
+
 G = ifft(sum(fft(A,nn).*fft(flipud(B),nn),2));
-G = G(1:am,:);
+%G = G(1:am,:);
+G = G(end-am+1:end,:);

@@ -10,7 +10,7 @@ plotheight = 8;
 stim_length = {'short','long'} ;
 
 sr = 30 ;          % (Hz) sampling rate
-dt = 1/sr ;       % delta t of stimulus
+dt = 1/sr ;       % delta t of spike train
 
 fntsz = 15 ;
 

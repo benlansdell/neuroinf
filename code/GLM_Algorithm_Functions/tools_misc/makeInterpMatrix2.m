@@ -11,6 +11,11 @@ if nbn<1
     nbn = round(1./nbn);
 end
 
+if nbn == 1
+	M = speye(slen);
+	return
+end
+
 c1 = [1./nbn:1./nbn:1]';
 cc = [c1; flipud(c1)-1/nbn];
 M = spalloc(nbn*slen,slen, 2*nbn*slen);

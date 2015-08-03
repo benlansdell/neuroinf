@@ -1,50 +1,66 @@
-clear ;
+clear ; 
 %cd('/Users/Shared/MANUSCRIPTS/Adrienne_Yonitan/Retinal_data') %DK files
 %cd('/home/aljadeff/Documents/MATLAB/neuroinfo_retina/data') %YA files
 cd('/home/lansdell/projects/neuroinf/data') %BL files
 
-pltpath = '/home/lansdell/projects/neuroinf/plots/';
-plotwidth = 8;
-plotheight = 8;
-
 stim_length = {'short','long'} ;
 
-sr = 30 ;          % (Hz) sampling rate
-dt = 1/sr ;       % delta t of stimulus
+dt = 1/30 ;%ds/sr ;    % delta t of stimulus 
+sr = 1/dt ; 
+dt = 1;
+nspk = zeros(1,53) ;       % a vector with the number of spikes for each cell 
 
-fntsz = 15 ;
+logl_glm = zeros(2,53) ;
 
-%for icell = 1:3
+% Filter_rank = 5 ; % Number of column/row vector pairs to use
 
-    icell = 13;
-    iL = 2;
-        fn_out = [pltpath '/Retina_cell_' num2str(icell) '_glmtest_' stim_length{iL} '.eps'];
-        load(['Retina_cell_' num2str(icell) '_glmtest_' stim_length{iL} '.mat']) ;
-        load(['Retina_cell_' num2str(icell) '_sta_' stim_length{iL} '.mat']) ;
-        
-        figure ;
+rep = 10 ;
+    
+global RefreshRate;  % Stimulus refresh rate (Stim frames per second)
+RefreshRate = sr ; 
 
-        subplot(2,1,1) ;
-        cm = max(abs(gg.k(:))) ;
-        Splot = zeros(sqrt(pX),sqrt(pX)*pT) ;
-        for i = 1:pT
-            Splot(1:sqrt(pX),(1:sqrt(pX))+(i-1)*sqrt(pX)) = reshape(gg.k(i,:),sqrt(pX),sqrt(pX)) ;
+for icell = 1:53
+    for iL = 1:2
+        disp(num2str(icell)) ; disp(num2str(iL)) ; % counter as loop is long
+
+        load(['Retina_cell_' num2str(icell) '_stim_resp_' stim_length{iL} '.mat']) ;
+        S = S/p ;
+        St = St/p ;
+        sta = S'*R/sum(R) - mean(S,1)' ; 
+        sta = reshape(sta,pX,pT)' ;
+        %S1 = S(:,1:pX) ; 
+        %S1t = St(:,1:pX) ;
+        S1 = S(:,pX*(pT-1)+1:pX*pT) ; 
+        S1t = St(:,pX*(pT-1)+1:pX*pT) ; 
+        nspk(icell) = sum(R) ;
+        iR = find(R>0)' ;
+    
+        % Compute STA and use as initial guess for k
+    
+        % 4. Do ML fitting of params with simulated data %=====================
+
+        %  Initialize params for fitting --------------
+        gg0 = makeFittingStruct_GLM_Retina(sta,min(pX,pT),dt);
+        gg0.tsp = iR ;
+        gg0.tspi = 1 ;
+        [logli0,rr0,tt] = neglogli_GLM(gg0,S1); % Compute logli of initial params
+
+
+        % Do ML estimation of model params
+        opts = {'display', 'iter', 'maxiter', 100};
+        [gg, negloglival] = MLfit_GLMbi(gg0,S1,opts); % do ML (requires optimization toolbox)
+ 
+        Rt_glm = zeros(1,Tt) ;
+    
+        for ir = 1:rep
+            [iR_glm, vmem,Ispk] = simGLM(gg, S1t) ;
+            Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1 ;
         end
-        imagesc(1:sqrt(pX)*pT,1:sqrt(pX),Splot, [-cm cm]) ; hold on
-        plot(0.5+[0 0 pT*sqrt(pX) pT*sqrt(pX) 0 ],0.5+[0 sqrt(pX) sqrt(pX) 0 0],'k') ; hold on ;
-        for i = 1:pT-1
-            plot(i*sqrt(pX)*[1 1]+0.5,0.5+[0 sqrt(pX)],'k') ; hold on ;
-        end
-        colormap hot;
-        axis image xy off ;
-        set(gca,'FontSize',fntsz,'Yaxislocation','right') ;
-        
-        subplot(2,1,2) ;
-        plot(gg.iht,gg.ihbas*gg.ih)
-        plot(dt*gg.iht,zeros(size(gg.iht)),'k') ; hold on ;
-        plot(dt*gg.iht,gg.ihbas*gg.ih,'b','LineWidth',3) ; axis tight ; box off ;
-        legend('GLM spike history filter') ;
-        xlabel('time relative to spike (s)') ;
-        set(gca,'FontSize',fntsz) ;
-        saveplot(gcf, fn_out, 'eps', [plotwidth plotheight]);
-%end
+        Rt_glm = Rt_glm'/rep + 1e-8 ;
+
+        save(['Retina_cell_' num2str(icell) '_glmamended_' stim_length{iL} '.mat'],'gg','Rt_glm') ; 
+
+        logl_glm(iL,icell) = mean(Rt.*log(Rt_glm)-(Rt_glm)*dt) ;
+    end
+end
+ save('Retina_GLMamedned_model_All_LogLikelihood.mat','logl_glm') ;

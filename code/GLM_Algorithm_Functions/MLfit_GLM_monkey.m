@@ -23,8 +23,8 @@ else
 end
 
 % Set initial params
-%prs0 = extractFitPrs_GLM_monkey(gg,Stim,MAXSIZE);
-prs0 = extractFitPrs_GLM(gg,Stim,MAXSIZE);
+prs0 = extractFitPrs_GLM_monkey(gg,Stim,MAXSIZE);
+%prs0 = extractFitPrs_GLM(gg,Stim,MAXSIZE);
 
 % minimize negative log likelihood
 [prs,fval] = fminunc(@Loss_GLM_logli,prs0,opts);

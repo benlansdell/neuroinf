@@ -5,12 +5,10 @@ datafile = './data/mabel_reaching_5-4-10.mat';
 %Test run...
 %nU = 4;
 nU = 45;
-nUtop = 8;
 nS = 4;
 samplerate = RefreshRate;
 nRep = 20;
-nUtotal = 8;
-frames = 6;
+frames = 100;
 binsize = 1/RefreshRate;
 processed = preprocess_monkey_pillow(datafile, binsize, dt, frames);    
 
@@ -22,16 +20,16 @@ gaussFilter_fr = exp(-x.^2/(2*sigma_fr^2));
 gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
 
 %Only fit the top 8 units by firing rate
-spikecounts = sum(processed.spiketrain);
-tosort = zeros(nU,2);
-for idx = 1:nU
-    tosort(idx,:) = [spikecounts(idx),idx];
-end
-t=flipud(sortrows(tosort));
-topunits = t(1:nUtop,2);
-processed.spiketrain = processed.spiketrain(:,topunits);
-processed.unitnames = processed.unitnames(topunits);
-processed.spikes = processed.spikes(topunits);
+%spikecounts = sum(processed.spiketrain);
+%tosort = zeros(nU,2);
+%for idx = 1:nU
+%    tosort(idx,:) = [spikecounts(idx),idx];
+%end
+%t=flipud(sortrows(tosort));
+%topunits = t(1:nUtop,2);
+%processed.spiketrain = processed.spiketrain(:,topunits);
+%processed.unitnames = processed.unitnames(topunits);
+%processed.spikes = processed.spikes(topunits);
 
 trainingtime = 160000;
 finaltime = 200000;
@@ -40,6 +38,7 @@ processed.cursor = processed.cursor(1:200000,:);
 processed.grip = processed.grip(1:200000,:);
 processed.spiketrain = processed.spiketrain(1:200000,:);
 processed.stim = processed.stim(1:200000,:);
+processed.stacked = processed.stacked(1:200000,:);
 
 %Split into 20% test and 80% training set
 processedtest = processed;
@@ -48,13 +47,15 @@ processed.cursor = processed.cursor(trainingidx,:);
 processed.grip = processed.grip(trainingidx,:);
 processed.stim = processed.stim(trainingidx,:);
 processed.spiketrain = processed.spiketrain(trainingidx,:);
+processed.stacked = processed.stacked(trainingidx,:);
 
 processedtest.cursor = processedtest.cursor(~trainingidx,:);
 processedtest.grip = processedtest.grip(~trainingidx,:);
 processedtest.stim = processedtest.stim(~trainingidx,:);
 processedtest.spiketrain = processedtest.spiketrain(~trainingidx,:);
+processtetest.stacked = processedtest.stacked(~trainingidx,:);
 
-for idx = 1:nUtop
+for idx = 1:nU
     sp = processed.spikes{idx};
     sptrain = sp(sp<trainingtime);
     sptest = sp(sp<finaltime & sp>trainingtime);
@@ -67,7 +68,7 @@ nS = size(processed.stim,2);
 p = frames*nS;
 fn_out = './monkeyresults/run_glm_fitting_pillow.eps';
 ggs = {};
-for icell = 1:nUtotal
+for icell = 1:nU
     disp(num2str(icell));
     stim = processed.stim;
     stacked = processed.stacked;
@@ -83,14 +84,14 @@ for icell = 1:nUtotal
     gg0.tspi = 1;
     opts = {'display', 'iter', 'maxiter', 100};
     [gg, negloglival] = MLfit_GLM_monkey(gg0,stim,opts);
-    save(['./monkeyresults/Pillow_cell_' num2str(icell) '_glm.mat'],...
+    save(['./monkeyresults/Pillow_cell_' num2str(icell) '_glm_ext.mat'],...
         'gg'); 
     ggs{icell} = gg;
 end
 
 %Testing stim with simulation
 p = frames*nS;
-for icell = 1:nUtotal
+for icell = 1:nU
     idx = t(icell,2);
     disp(num2str(icell));
     stim = processedtest.stim;

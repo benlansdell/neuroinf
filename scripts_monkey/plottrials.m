@@ -12,15 +12,17 @@ RELEASEGRIP = 104;
 GRIPPRESSED = 368;
 GRIPRELEASED = 369;
 
+figure
 clf
 %Whole recording lasts 6000s...
-tstart = 5000; tend = 5060;
+tstart = 525.64; tend = 575.64;
 tidx = (tstart*100):(tend*100);
 tt = tidx/100;
 
 %Plot grip force
 hold on
 h(1) = plot(tt, Grip_force(tidx), '--');
+%h(1) = plot(tt, Cursor_X(tidx), '--', tt, Cursor_Y(tidx), '--', tt, Cursor_Z(tidx), '--');
 colors = colormap
 
 %Plot Events
@@ -155,3 +157,40 @@ subplot(2,2,4)
 plot(tt, autotorqueGrip);
 title('Grip force');		
 saveplot(gcf, ['stim_autocorrelations.eps'], 'eps', [6 6]);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Double check processed structure labels in trial times correctly%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+datafile = './data/mabel_reaching_5-4-10.mat';
+nU = 45;
+binsize = 1/100;
+samplerate = 1/binsize;
+nK_sp = 40;
+nK_stm = 6;
+a = 10;
+dt_sp = binsize;
+dt_stm = 100/1000;
+const = 'on';
+percentage = 80;
+models = {};
+nRep = 20;
+fn_out = './monkeyresults/run_glm_fitting_sp_100Hz_fwdrev_trim_80pt.eps';
+processed = preprocess_monkey(datafile, binsize, 1);
+nB = size(processed.cursor,1);
+
+istart = 1;
+iend = 5000;
+ii = istart:iend;
+tt = (ii)*binsize;
+
+figure 
+clf
+intrial = processed.intrial(ii)==1;
+plot(tt, processed.grip(ii), '--')%, tt, processed.cursor(ii, 1), tt, processed.cursor(ii, 2), tt, processed.cursor(ii, 3));
+hold on
+%plot(tt(intrial), processed.grip(intrial), '.', tt(intrial), processed.cursor(intrial, 1), '.',...
+% tt(intrial), processed.cursor(intrial, 2), '.', tt(intrial), processed.cursor(intrial, 3), '.')
+
+plot(tt(intrial), processed.grip(intrial), 'r.')
+%Compare to images made above... seems to check out

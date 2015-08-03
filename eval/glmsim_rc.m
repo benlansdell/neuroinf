@@ -4,7 +4,7 @@ function [y, tspks, rho, dev] = glmsim_rc(processed, model, data, maxspks)
 	%	D(y,mu) = 2\sum y_i ln (y_i / \mu_i) - y_i + \mu_i
 	%
 	%Usage:
-	%	[y, tspks] = glmsim(model, data)
+	%	[y, tspks] = glmsim_rc(model, data)
 	%     
 	%Input:
 	%	model = a structure of fit coefficients from MLE_glmfit
@@ -17,8 +17,8 @@ function [y, tspks, rho, dev] = glmsim_rc(processed, model, data, maxspks)
 
 	if (nargin < 4) maxspks = 0; end
 	bs = processed.binsize;
-	%Force there to be a maximum number of spikes per time bin equal to binsize/0.001
-	%meaning there is at most one spike per two milliseconds
+	%Force there to be a maximum number of spikes per time bin equal to binsize/0.004
+	%meaning there is at most one spike per four milliseconds
 	if maxspks == 1
 		nMaxSpks = bs/0.002;
 	end
@@ -47,7 +47,7 @@ function [y, tspks, rho, dev] = glmsim_rc(processed, model, data, maxspks)
 		%sp_indices
 		%and the spike history filter in particular
 		k_sp = data.spbasis*b_hat(sp_indices)';
-		k_sp(end) = -2;
+		%k_sp(end) = -2;
 		%then set the spike history filter coefficients to zero, since we're generating new spikes and not using data.X's spike history
 		b_hat(sp_indices) = 0;
 		%compute the component of mu = e^eta that comes from the remaining filters used
@@ -57,7 +57,7 @@ function [y, tspks, rho, dev] = glmsim_rc(processed, model, data, maxspks)
 			%compute mu that incorporates the current spike history
 			%k_sp
 			%sp_hist
-			mu_sp = mu(j)*exp(sp_hist*k_sp);
+			mu_sp = mu(j);%*exp(sp_hist*k_sp);
 			%then sample y ~ Pn(exp(eta)) to decide if we spike or not
 			if maxspks == 1
 				yij = min(poissrnd(mu_sp), nMaxSpks);

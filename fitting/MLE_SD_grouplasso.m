@@ -51,7 +51,9 @@ function model = MLE_SD_grouplasso(data, lambda, const)
 	nC = data.nK_sp;
 	%Assume all but the last model component is a spike history term...
 	cplidx = [];
-	for idx = 1:(size(data.k,1)-1)
+	%for idx = 1:(size(data.k,1)-1)
+	%for idx = 1:nU
+	for idx = 1:(size(data.k,1))
 		cplidx = [cplidx(:); data.k{idx,2}(:)];
 	end
 
@@ -100,6 +102,12 @@ function [ll, d, h] = logli(X,y,b_hat,cplidx,nC,lambda)
 end
 
 function ll = l(X,y,b_hat,r,lambda)
+	if size(b_hat,1) == 1
+		b_hat = b_hat';
+	end
+	if size(y,1) ~= 1
+		y = y';
+	end
 	%Log likelihood
 	ll = y*X*b_hat-sum(exp(X*b_hat)+log(y+0.00001)');
 	%Add regularization term (we're taking the one norm of a two norm...)

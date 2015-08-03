@@ -22,7 +22,7 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 	%	model = MLE_glmfit(data, const);
 	%	plot_filters_monkey(models, data, processed, fn_out);
 
-	nU = size(data.y,1); %number of units
+	nU = size(processed.unitnames,1); %number of units
 	k = data.k; %filter names and indices
 	nK = size(k,1); %number of filters
 	nP = 3; %number of things to plot about each fitted filter
@@ -58,6 +58,29 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 	set(gcf, 'PaperPositionMode', 'manual');
 	set(gcf, 'PaperPosition', [0 0 plotwidth plotheight]);
 
+	%Before plotting, collect the largest cursor and grip values to set scale by
+	ymincurs = 0;
+	ymaxcurs = 0;
+	ymingrip = 0;
+	ymaxgrip = 0;
+	for i = 1:nM
+		model = models{i};
+		idx = 1;
+		b_hat = model.b_hat(idx,:);
+		for j = 1:nK
+			%Extract data
+			name = k{j,1};
+			filt = b_hat(k{j,2}+1);
+			if j > 1 & j < 5
+				ymincurs = min(ymincurs, min(filt));
+				ymaxcurs = max(ymaxcurs, max(filt));
+			elseif j ==5
+				ymingrip = min(ymingrip, min(filt));
+				ymaxgrip = max(ymaxgrip, max(filt));
+			end
+		end
+	end
+
 	clf;
 	for i = 1:nM
 		model = models{i};
@@ -92,10 +115,18 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 			tt = (0:length(filt)-1)*dt_filt*1000;
 			if j == 1
 				tt = tt-max(tt);
+				ymin = min(filt-se)*1.2;
+				ymax = max(filt+se)*1.2;
+			elseif j > 1 & j < 5
+				tt = tt-max(tt)/2;
+				ymin = ymincurs*1.2;
+				ymax = ymaxcurs*1.2;
+			elseif j == 5
+				tt = tt-max(tt)/2;
+				ymin = ymingrip*1.2;
+				ymax = ymaxgrip*1.2;
 			end
 			hold on
-			ymin = min(filt-se)*1.2;
-			ymax = max(filt+se)*1.2;
 			area(tt, filt+se, ymin, 'FaceColor', [0.8 0.8 0.8])
 			area(tt, filt-se, ymin, 'FaceColor', [1 1 1])
 			plot(tt, filt);
@@ -126,8 +157,8 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 			str1(3) = {['Degrees of freedom: ' num2str(stats.dfe)]};
 			str1(4) = {['Estimated dispersion: ' num2str(stats.sfit)]};
 			str1(5) = {['Binsize: ' num2str(processed.binsize)]};
-			str1(6) = {['Seconds of training: ' num2str(size(data.y,2)*processed.binsize)]};
-			str1(7) = {['Number of spikes: ' num2str(sum(processed.spikes(:,i)))]};
+			str1(6) = {['Seconds of training: ' num2str(size(data.cursor,1)*processed.binsize)]};
+			%str1(7) = {['Number of spikes: ' num2str(sum(processed.spikes(:,i)))]};
 			text(0.1,0.8,str1, 'FontSize', 5, 'Interpreter', 'none')
 			axis off
 		end

@@ -13,5 +13,7 @@ addpath([homedir 'lansdell/projects/neuroinf/preprocess']);
 addpath([homedir 'lansdell/projects/neuroinf/models']);
 addpath([homedir 'lansdell/projects/neuroinf/scripts']);
 addpath_recurse([homedir 'lansdell/projects/neuroinf/code']);
+addpath_recurse([homedir 'lansdell/matlab/L1General']);
+addpath_recurse([homedir 'lansdell/matlab/schmidt']);
 
 

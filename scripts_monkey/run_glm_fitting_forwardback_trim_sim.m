@@ -29,12 +29,13 @@ for idx = 1:nU
 	%sptrain = sptrain/nRep;
 	%simtrains{idx} = sptrain;
 end
-plot_filters_monkey(models, data, processed, fn_out);
+plot_filters_rc_monkey(models, data, processed, fn_out);
 
 %Save models, and other data
 data = rmfield(data, {'X', 'y'});
 processed = rmfield(processed, {'cursor', 'grip', 'spikes'});
-save('./monkeyresults/run_glm_fitting_sp_100Hz_forwardback_trim_80pt.mat', 'models', 'data', 'processed', 'simtrains', 'nRep')
+%save('./monkeyresults/run_glm_fitting_sp_100Hz_forwardback_trim_80pt.mat', 'models', 'data', 'processed', 'simtrains', 'nRep')
+save('./monkeyresults/run_glm_fitting_sp_100Hz_forwardback_trim_80pt.mat', 'models', 'data', 'processed')
 
 %Plot the simulated spike trains... 
 %sigma_fr = .25;

@@ -7,7 +7,7 @@ function [data, testdata] = splitforCV(data, percentage)
 	data.cursor = data.cursor(1:trainidx,:); 
 	data.grip = data.grip(1:trainidx,:);
     testdata.X = testdata.X(trainidx+1:end,:);
-    testdata.y = testdata.y(trainidx+1:end,:);
+    testdata.y = testdata.y(1,trainidx+1:end);
 	testdata.cursor = testdata.cursor(trainidx+1:end,:); 
 	testdata.grip = testdata.grip(trainidx+1:end,:);
 end

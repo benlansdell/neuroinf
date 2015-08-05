@@ -66,7 +66,7 @@ for icell = 1:nU
     gg0.tsp = resp';
     gg0.tspi = 1;
     opts = {'display', 'iter', 'maxiter', 100};
-    [gg, negloglival] = MLfit_GLM_monkey(gg0,stim,opts,processed);
+    [gg, negloglival] = MLfit_GLM_monkey(gg0,stim,opts);
     save(['./monkeyresults2/Pillow_cell_' num2str(icell) '_glm_ext_5Hz.mat'],...
         'gg'); 
     ggs{icell} = gg;

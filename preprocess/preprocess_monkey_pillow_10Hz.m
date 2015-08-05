@@ -1,4 +1,4 @@
-function processed = preprocess_monkey_pillow(datafile, binsize, dt, frames)
+function processed = preprocess_monkey_pillow_10Hz(datafile, binsize, dt, frames)
 	%Preprocess both spike data and stim data
 	%
 	%Usage:
@@ -24,8 +24,8 @@ function processed = preprocess_monkey_pillow(datafile, binsize, dt, frames)
 	%
 	%Test code:
 	%	datafile = './data/mabel_reaching_5-4-10.mat';
-	%	binsize = 1/100;
-	%	dt = 0.1;
+	%	binsize = 1/10;
+	%	dt = 0.01;
 	%	frames = 4;
 	%	processed = preprocess_monkey_pillow(datafile, binsize, dt, frames);
 
@@ -39,6 +39,15 @@ function processed = preprocess_monkey_pillow(datafile, binsize, dt, frames)
     processed.grip = Grip_force;
     processed.stim = [processed.cursor, processed.grip];
     processed.dt = dt;
+ 
+    %Downsample stim
+    every = 100*binsize;
+    nB = size(processed.cursor,1);
+    bins = 1:every:nB;
+    processed.stim = processed.stim(bins,:);
+    processed.grip = processed.grip(bins,:);
+    processed.cursor = processed.cursor(bins,:);
+
     unitnames = who('CSPIK*');
     processed.unitnames = unitnames;
     processed.frames = frames;
@@ -51,8 +60,9 @@ function processed = preprocess_monkey_pillow(datafile, binsize, dt, frames)
     for idx = 1:nU
     	%Get data for idxth spike train
     	eval(['spikes = ' unitnames{idx} ';']);
+	    %Change scale spikes are specified at
     	processed.spikes{idx} = spikes*dt;
-    	bins = ceil(spikes/10);
+    	bins = ceil(spikes*dt);
     	for b = bins
 	    	processed.spiketrain(b,idx) = processed.spiketrain(b,idx)+1;
 		end
@@ -69,10 +79,6 @@ function processed = preprocess_monkey_pillow(datafile, binsize, dt, frames)
 	processed.cursor = processed.cursor(1:end-frames,:);
 	processed.grip = processed.grip(1:end-frames,:);
 	processed.spiketrain = processed.spiketrain(1:end-frames,:);
-	%newend = ;
-	%for idx = 1:nU
-	%	processed.spikes{idx} = processed.spikes{idx}(processed.spikes{idx}<newend);
-	%end
 
 	%Note which bins are inside a trial
 	trialstartidx = find(Events_Data(2,:)==TRIALSTART);

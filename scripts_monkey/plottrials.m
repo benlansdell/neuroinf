@@ -193,4 +193,5 @@ hold on
 % tt(intrial), processed.cursor(intrial, 2), '.', tt(intrial), processed.cursor(intrial, 3), '.')
 
 plot(tt(intrial), processed.grip(intrial), 'r.')
+saveplot(gcf, ['trialstrimmed.eps'])
 %Compare to images made above... seems to check out

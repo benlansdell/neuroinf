@@ -23,7 +23,8 @@ function plot_filters_rc_monkey(mdls, data, processed, fn_out)
 	%	model = MLE_glmfit(data, const);
 	%	plot_filters_rc_monkey(models, data, processed, fn_out);
 
-	nU = size(processed.cursor,1); %number of units
+	%nU = size(processed.cursor,1); %number of units
+	nU = length(mdls); %number of units
 	k = data.k; %filter names and indices
 	nK = size(k,1); %number of filters
 	nP = 3; %number of things to plot about each fitted filter
@@ -68,6 +69,12 @@ function plot_filters_rc_monkey(mdls, data, processed, fn_out)
 		model = models{i};
 		idx = 1;
 		b_hat = model.b_hat(idx,:);
+		if model.conditioned == 0
+			continue
+		end
+		if model.converged == 0
+			continue
+		end
 		for j = 1:nK
 			%Extract data
 			name = k{j,1};
@@ -82,6 +89,11 @@ function plot_filters_rc_monkey(mdls, data, processed, fn_out)
 		end
 	end
 
+	ymincurs = max(-0.05, ymincurs);
+	ymaxcurs = min(0.05, ymaxcurs);
+	ymingrip = max(-4, ymingrip);
+	ymaxgrip = min(4, ymaxgrip);
+
 	clf;
 	for i = 1:nM
 		model = models{i};
@@ -90,6 +102,12 @@ function plot_filters_rc_monkey(mdls, data, processed, fn_out)
 		dev = model.dev{idx};
 		stats = model.stats{idx};
 		const = b_hat(1);
+		if model.conditioned == 0
+			continue
+		end
+		if model.converged == 0
+			continue
+		end		
 		for j = 1:nK
 			%Extract data
 			name = k{j,1};
@@ -166,8 +184,12 @@ function plot_filters_rc_monkey(mdls, data, processed, fn_out)
 			str1(3) = {['Degrees of freedom: ' num2str(stats.dfe)]};
 			str1(4) = {['Estimated dispersion: ' num2str(stats.sfit)]};
 			str1(5) = {['Binsize: ' num2str(processed.binsize)]};
-			str1(6) = {['Seconds of training: ' num2str(size(data.y,2)*processed.binsize)]};
-			str1(7) = {['Number of spikes: ' num2str(sum(processed.spikes(:,i)))]};
+			if isfield(data, 'y')
+				str1(6) = {['Seconds of training: ' num2str(size(data.y,2)*processed.binsize)]};
+			end
+			if isfield(processed, 'spikes')
+				str1(7) = {['Number of spikes: ' num2str(sum(processed.spikes(:,i)))]};
+			end
 			text(0.1,0.8,str1, 'FontSize', 5, 'Interpreter', 'none')
 			axis off
 		end

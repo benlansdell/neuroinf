@@ -3,3 +3,4 @@ data/
 *.mat
 monkeyresults/
 monkeyresults2/
+*.m~

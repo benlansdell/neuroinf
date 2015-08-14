@@ -91,6 +91,20 @@ for idx = 1:nU
 end
 plot_filters_rc_monkey(models, data, processed, fn_out);
 
+goodunits = 46-[5, 6, 7, 9, 10, 11, 12, 13, 15, 23, 25, 26, 27, 28, 29, 31, 32, 37, 38, 39, 40, 41, 42, 43];
+fn_out = './monkeyresults2/run2_glm_fitting_sp_5Hz_fwdrev_80pt_goodunits.eps';
+plot_filters_rc_monkey_good(models, data, processed, goodunits, fn_out);
+
+models1 = models; data1 = data; processed1 = processed;
+load('./monkeyresults2/run1_glm_fitting_sp_5Hz_forwardback_trim_80pt.mat')
+models2 = models; data2 = data; processed2 = processed;
+plot_filters_rc_monkey_compareMATLABglm(models1, data1, processed1, models2, data2, processed2,...
+ [fn_out(1:end-4) '_compare_run1.eps']);
+models = models1; 
+data = data1; 
+processed = processed1;
+
+
 %Save models, and other data
 data = rmfield(data, {'X', 'y'});
 processed = rmfield(processed, {'cursor', 'grip', 'spikes'});

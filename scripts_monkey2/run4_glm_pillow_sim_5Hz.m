@@ -62,7 +62,7 @@ for icell = 1:nU
     sta = stacked'*sptrain/sum(sptrain) - mean(stacked,1)'; 
     sta = reshape(sta,frames,[]);
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey(sta,dt);
+    gg0 = makeFittingStruct_GLM_monkey_5Hz(sta,dt);
     gg0.tsp = resp';
     gg0.tspi = 1;
     opts = {'display', 'iter', 'maxiter', 100};
@@ -93,16 +93,31 @@ end
 %Plot them
 plot_filters_monkeypillow(ggs, processed, fn_out);
 
-%Plot against my own filters 
-fn_out = './monkeyresults2/run4_glm_fitting_pillow_5Hz_compare.eps';
-processed_pillow = processed;
-load('./monkeyresults2/run4_glm_fitting_sp_100Hz_forwardback_80pt.mat');
-ggs = {};
-for icell = 1:nU
-    load([['./monkeyresults2/Pillow_cell_' num2str(icell) '_glm_ext_5Hz.mat']])
-    ggs{icell} = gg;
+goodunits = 46-[5, 6, 7, 9, 10, 11, 12, 13, 15, 23, 25, 26, 27, 28, 29, 31, 32, 37, 38, 39, 40, 41, 42, 43];
+%plot_filters_rc_monkey_good(models, data, processed, fn_out, goodunits);
+
+%Plot against run3's filters...
+ggs4 = ggs;
+for idx = 1:nU
+    load(['./monkeyresults2/Pillow_cell_' num2str(idx) '_glm_ext_5Hz_trim.mat'])
+    ggs3{idx} = gg;
 end
+plot_filters_monkeypillow_comparepillow(ggs3, ggs4, processed, [fn_out '_comparerun3']);
+
+
+%Plot against my own filters 
+fn_out = './monkeyresults2/run4_glm_fitting_pillow_5Hz_compare_run2.eps';
+processed_pillow = processed;
+load('./monkeyresults2/run2_glm_fitting_sp_5Hz_forwardback_80pt.mat');
+%ggs = {};
+%for icell = 1:nU
+%    load([['./monkeyresults2/Pillow_cell_' num2str(icell) '_glm_ext_5Hz.mat']])
+%    ggs{icell} = gg;
+%end
 plot_filters_monkey_compare(ggs, processed_pillow, models, data, processed, fn_out);
+
+fn_out = './monkeyresults2/run4_glm_fitting_pillow_5Hz_comparerun2_goodunits.eps';;
+plot_filters_monkey_compare_good(ggs, processed_pillow, models, data, processed, fn_out, goodunits)
 
 %Load my sims
 %load('./monkeyresults2/run4_glm_fitting_sprc_100Hz_dtstm_0_01_sim.mat');

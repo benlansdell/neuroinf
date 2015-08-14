@@ -1,4 +1,4 @@
-function plot_filters_monkeypillow(models, processed, fn_out)
+function plot_filters_monkeypillow_comparepillow(models, models2, processed, fn_out)
 	%Plot filters of a fitted GLM model, along with other fit statistics
 	%     
 	%Input:
@@ -48,6 +48,16 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 		ymaxcurs = max(ymaxcurs, max(max(curs)));
 		ymingrip = min(ymingrip, min(grip));
 		ymaxgrip = max(ymaxgrip, max(grip));
+
+		model = models2{i};
+		idx = 1;
+		stimfilt = model.k;
+		curs = stimfilt(:,1:3);
+		grip = stimfilt(:,4);
+		ymincurs = min(ymincurs, min(min(curs)));
+		ymaxcurs = max(ymaxcurs, max(max(curs)));
+		ymingrip = min(ymingrip, min(grip));
+		ymaxgrip = max(ymaxgrip, max(grip));
 	end
 
 	for i = 1:nM
@@ -56,22 +66,33 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 		stimfilt = model.k;
 		const = model.dc;
 		sphist = model.ihbas*model.ih;
+
+		model2 = models2{i};
+		idx = 1;
+		stimfilt2 = model2.k;
+		const2 = model2.dc;
+		sphist2 = model2.ihbas*model2.ih;
+
 		for j = 1:(nK)
 			%Extract data
 			name = names{j};
 			if j == 1
 				filt = sphist(:);
 				filt = flipud(filt);
-				ymin = min(filt)*1.2;
-				ymax = max(filt)*1.2;
+				filt2 = sphist2(:);
+				filt2 = flipud(filt2);
+				ymin = min([min(filt), min(filt2)])*1.2;
+				ymax = max([max(filt), max(filt2)])*1.2;
 			elseif j > 1 & j < 5
 				ymin = ymincurs*1.2;
 				ymax = ymaxcurs*1.2;
 				filt = stimfilt(:,j-1);
+				filt2 = stimfilt2(:,j-1);
 			else 
 				ymin = ymingrip*1.2;
 				ymax = ymaxgrip*1.2;
 				filt = stimfilt(:,j-1);
+				filt2 = stimfilt2(:,j-1);
 			end
 			dt_filt = model.dt*RefreshRate;
 			ax=axes('position',sub_pos{j,i},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
@@ -79,7 +100,8 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 			if j == 1
 				tt = (tt-max(tt))/RefreshRate/model.dt;
 			end
-			plot(tt, filt);
+			hold on
+			plot(tt, filt, tt, filt2);
 			ylim([ymin ymax])
 			if length(tt) > 1
 				xlim([min(tt) max(tt)]);

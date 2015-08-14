@@ -1,28 +1,7 @@
-function plot_filters_monkey(mdls, data, processed, fn_out)
-	%Plot filters of a fitted GLM model, along with other fit statistics
-	%     
-	%Input:
-	%	model = data structure output by function in ./fitting (containing fitted coefficients)
-	%	data = data structure output by ./models containing data used for fit
-	%	processed = data structure output by ./preprocess containing processed raw data
-	%	fn_out = base filename to write plots to for each unit
-	%
-	%Test code:
- 	%	datafile = './data/mabel_reaching_5-4-10.mat';
- 	%	binsize = 1/100;
- 	%	nK_sp = 20;
- 	%	nK_stm = 6;
- 	%	dt_sp = binsize;
- 	%	dt_stm = 5/100;
- 	%	unitidx = 13;
- 	%	const = 'on';
- 	%	fn_out = './testfilters33hz.eps';
- 	%	processed = preprocess_monkey(datafile, binsize, unitidx);
- 	%	data = filters_monkey_sp_stm(processed, nK_sp, nK_stm, dt_sp, dt_stm);
-	%	model = MLE_glmfit(data, const);
-	%	plot_filters_monkey(models, data, processed, fn_out);
+function plot_filters_rc_monkey_compareMATLABglm(mdls, data, processed, mdls2, data2, processed2, fn_out)
 
-	nU = size(processed.unitnames,1); %number of units
+	%nU = size(processed.cursor,1); %number of units
+	nU = length(mdls); %number of units
 	k = data.k; %filter names and indices
 	nK = size(k,1); %number of filters
 	nP = 3; %number of things to plot about each fitted filter
@@ -30,11 +9,12 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 	h = figure;
 	if ~iscell(mdls)
 		models{1} = mdls;
+		models2{1} = mdls2;
 	else
 		models = mdls;
+		models2 = mdls2;
 	end
 	nM = length(models);
-
 
 	%Prepare subplots
 	plotheight=nM+4;
@@ -65,8 +45,10 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 	ymaxgrip = 0;
 	for i = 1:nM
 		model = models{i};
+		model2 = models2{i};
 		idx = 1;
 		b_hat = model.b_hat(idx,:);
+		b_hat2 = model2.b_hat(idx,:);
 		if model.conditioned == 0
 			continue
 		end
@@ -77,12 +59,17 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 			%Extract data
 			name = k{j,1};
 			filt = b_hat(k{j,2}+1);
+			filt2 = b_hat2(k{j,2}+1);
 			if j > 1 & j < 5
 				ymincurs = min(ymincurs, min(filt));
 				ymaxcurs = max(ymaxcurs, max(filt));
+				ymincurs = min(ymincurs, min(filt2));
+				ymaxcurs = max(ymaxcurs, max(filt2));
 			elseif j ==5
 				ymingrip = min(ymingrip, min(filt));
 				ymaxgrip = max(ymaxgrip, max(filt));
+				ymingrip = min(ymingrip, min(filt2));
+				ymaxgrip = max(ymaxgrip, max(filt2));
 			end
 		end
 	end
@@ -100,21 +87,31 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 		end
 		if model.converged == 0
 			continue
+		end		
+
+		model2 = models2{i};
+		b_hat2 = model2.b_hat(idx,:);
+		dev2 = model2.dev{idx};
+		stats2 = model2.stats{idx};
+		const2 = b_hat2(1);
+		if model2.conditioned == 0
+			continue
 		end
+		if model2.converged == 0
+			continue
+		end		
+
 		for j = 1:nK
 			%Extract data
 			name = k{j,1};
 			filt = b_hat(k{j,2}+1);
-			%If available, find statistics of fit, otherwise set these to zero
-			if isfield(stats, 'se')	
-				se = stats.se(k{j,2}+1)';
-				tstat = stats.t(k{j,2}+1);
-				pval = stats.p(k{j,2}+1);
-			else
-				se = zeros(size(k{j,2}));
-				tstat = zeros(size(k{j,2}));
-				pval = zeros(size(k{j,2}));
+			filt2 = b_hat2(k{j,2}+1);
+			%Raised cosine basis functions... back to temporal basis
+			if j ==1 
+				filt = data.spbasis*filt';
+				filt2 = data.spbasis*filt2';
 			end
+
 			dt_filt = k{j,3};
 			%If filter length is zero skip this one
 			if length(k{j,2}) < 1
@@ -127,8 +124,8 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 			tt = (0:length(filt)-1)*dt_filt*1000;
 			if j == 1
 				tt = tt-max(tt);
-				ymin = min(filt-se)*1.2;
-				ymax = max(filt+se)*1.2;
+				ymin = min([min(filt), min(filt2)])*1.2;
+				ymax = max([max(filt), max(filt2)])*1.2;
 			elseif j > 1 & j < 5
 				tt = tt-max(tt)/2;
 				ymin = ymincurs*1.2;
@@ -139,9 +136,9 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 				ymax = ymaxgrip*1.2;
 			end
 			hold on
-			area(tt, filt+se, ymin, 'FaceColor', [0.8 0.8 0.8])
-			area(tt, filt-se, ymin, 'FaceColor', [1 1 1])
-			plot(tt, filt);
+			%ymin = min(filt-se)*1.2;
+			%ymax = max(filt+se)*1.2;
+			plot(tt, filt, tt, filt2, '--');
 			ylim([ymin ymax]);
 			if length(tt) > 1
 				xlim([min(tt) max(tt)]);

@@ -1,28 +1,9 @@
-function plot_filters_monkey(mdls, data, processed, fn_out)
+function plot_filters_monkey_compare(pillow_models, pillow_processed, mdls, data, processed, fn_out, goodunits)
 	%Plot filters of a fitted GLM model, along with other fit statistics
-	%     
-	%Input:
-	%	model = data structure output by function in ./fitting (containing fitted coefficients)
-	%	data = data structure output by ./models containing data used for fit
-	%	processed = data structure output by ./preprocess containing processed raw data
-	%	fn_out = base filename to write plots to for each unit
-	%
-	%Test code:
- 	%	datafile = './data/mabel_reaching_5-4-10.mat';
- 	%	binsize = 1/100;
- 	%	nK_sp = 20;
- 	%	nK_stm = 6;
- 	%	dt_sp = binsize;
- 	%	dt_stm = 5/100;
- 	%	unitidx = 13;
- 	%	const = 'on';
- 	%	fn_out = './testfilters33hz.eps';
- 	%	processed = preprocess_monkey(datafile, binsize, unitidx);
- 	%	data = filters_monkey_sp_stm(processed, nK_sp, nK_stm, dt_sp, dt_stm);
-	%	model = MLE_glmfit(data, const);
-	%	plot_filters_monkey(models, data, processed, fn_out);
 
+	global RefreshRate
 	nU = size(processed.unitnames,1); %number of units
+	nU = length(goodunits); %number of units
 	k = data.k; %filter names and indices
 	nK = size(k,1); %number of filters
 	nP = 3; %number of things to plot about each fitted filter
@@ -31,9 +12,11 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 	if ~iscell(mdls)
 		models{1} = mdls;
 	else
-		models = mdls;
+		models = mdls(goodunits);
 	end
 	nM = length(models);
+	processed.unitnames = processed.unitnames(goodunits);
+	pillow_models = pillow_models(goodunits);
 
 
 	%Prepare subplots
@@ -85,22 +68,42 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 				ymaxgrip = max(ymaxgrip, max(filt));
 			end
 		end
+
+%		model = pillow_models{i};
+%		idx = 1;
+%		stimfilt = model.k;
+%		curs = stimfilt(:,1:3);
+%		grip = stimfilt(:,4);
+%		ymincurs = min(ymincurs, min(min(curs)));
+%		ymaxcurs = max(ymaxcurs, max(max(curs)));
+%		ymingrip = min(ymingrip, min(grip));
+%		ymaxgrip = max(ymaxgrip, max(grip));
 	end
 
 	clf;
 	for i = 1:nM
 		model = models{i};
+
 		idx = 1;
+		%Indep filters
 		b_hat = model.b_hat(idx,:);
 		dev = model.dev{idx};
 		stats = model.stats{idx};
 		const = b_hat(1);
+
+		%Pillow's filters
+		pmodel = pillow_models{i};
+		pstimfilt = pmodel.k;
+		pconst = pmodel.dc;
+		psphist = pmodel.ihbas*pmodel.ih;
+
 		if model.conditioned == 0
 			continue
 		end
 		if model.converged == 0
 			continue
 		end
+
 		for j = 1:nK
 			%Extract data
 			name = k{j,1};
@@ -115,6 +118,10 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 				tstat = zeros(size(k{j,2}));
 				pval = zeros(size(k{j,2}));
 			end
+			if j ==1 
+				filt = data.spbasis*filt';
+				se = zeros(size(filt));
+			end
 			dt_filt = k{j,3};
 			%If filter length is zero skip this one
 			if length(k{j,2}) < 1
@@ -126,17 +133,17 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 			ax=axes('position',sub_pos{j,i},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
 			tt = (0:length(filt)-1)*dt_filt*1000;
 			if j == 1
-				tt = tt-max(tt);
 				ymin = min(filt-se)*1.2;
 				ymax = max(filt+se)*1.2;
+				tt = tt-max(tt);
 			elseif j > 1 & j < 5
+				ymax = ymaxcurs;
+				ymin = ymincurs;
 				tt = tt-max(tt)/2;
-				ymin = ymincurs*1.2;
-				ymax = ymaxcurs*1.2;
-			elseif j == 5
+			else
+				ymax = ymaxgrip;
+				ymin = ymingrip;
 				tt = tt-max(tt)/2;
-				ymin = ymingrip*1.2;
-				ymax = ymaxgrip*1.2;
 			end
 			hold on
 			area(tt, filt+se, ymin, 'FaceColor', [0.8 0.8 0.8])
@@ -152,6 +159,28 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 			if i == 1
 				xlabel('time (ms)');
 			end
+
+			%Add pillows filters to plot:
+			%Spike history filter
+			if j == 1
+				pfilt = psphist(:);
+				pfilt = flipud(pfilt);
+			else
+				%Stim filters
+				pfilt = pstimfilt(:,j-1);
+			end
+			tt = (1:length(pfilt));
+			if j > 1
+				tt = tt/pmodel.dt;
+				tt = tt-max(tt)/2-1/pmodel.dt/2;
+				%Normalize
+				pfilt = pfilt*pmodel.dt*5;
+			else
+				tt = tt;
+				tt = 2*(tt-max(tt))/5;
+			end
+			plot(tt, pfilt, 'r');
+				%xlim([min(tt) max(tt)]);
 		end
 
 		if ischar(processed.unitnames)
@@ -169,12 +198,8 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 			str1(3) = {['Degrees of freedom: ' num2str(stats.dfe)]};
 			str1(4) = {['Estimated dispersion: ' num2str(stats.sfit)]};
 			str1(5) = {['Binsize: ' num2str(processed.binsize)]};
-			if isfield(data, 'y')
-				str1(6) = {['Seconds of training: ' num2str(size(data.y,2)*processed.binsize)]};
-			end
-			if isfield(processed, 'spikes')
-				str1(7) = {['Number of spikes: ' num2str(sum(processed.spikes(:,i)))]};
-			end
+			str1(6) = {['Seconds of training: ' num2str(size(data.cursor,1)*processed.binsize)]};
+			str1(7) = {['Number of spikes: ' num2str(sum(pillow_processed.spiketrain(:,i)))]};
 			text(0.1,0.8,str1, 'FontSize', 5, 'Interpreter', 'none')
 			axis off
 		end

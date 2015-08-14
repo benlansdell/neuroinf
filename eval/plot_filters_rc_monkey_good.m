@@ -1,4 +1,4 @@
-function plot_filters_monkey(mdls, data, processed, fn_out)
+function plot_filters_rc_monkey(mdls, data, processed, goodunits, fn_out)
 	%Plot filters of a fitted GLM model, along with other fit statistics
 	%     
 	%Input:
@@ -14,15 +14,17 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
  	%	nK_stm = 6;
  	%	dt_sp = binsize;
  	%	dt_stm = 5/100;
+ 	%	a = 10;
  	%	unitidx = 13;
  	%	const = 'on';
  	%	fn_out = './testfilters33hz.eps';
  	%	processed = preprocess_monkey(datafile, binsize, unitidx);
- 	%	data = filters_monkey_sp_stm(processed, nK_sp, nK_stm, dt_sp, dt_stm);
+ 	%	data = filters_monkey_sprc_stm(processed, nK_sp, nK_stm, a, dt_sp, dt_stm);
 	%	model = MLE_glmfit(data, const);
-	%	plot_filters_monkey(models, data, processed, fn_out);
+	%	plot_filters_rc_monkey(models, data, processed, fn_out);
 
-	nU = size(processed.unitnames,1); %number of units
+	%nU = size(processed.cursor,1); %number of units
+	nU = length(goodunits); %number of units
 	k = data.k; %filter names and indices
 	nK = size(k,1); %number of filters
 	nP = 3; %number of things to plot about each fitted filter
@@ -31,10 +33,10 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 	if ~iscell(mdls)
 		models{1} = mdls;
 	else
-		models = mdls;
+		models = mdls(goodunits);
 	end
 	nM = length(models);
-
+	processed.unitnames = processed.unitnames(goodunits);
 
 	%Prepare subplots
 	plotheight=nM+4;
@@ -87,6 +89,11 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 		end
 	end
 
+	ymincurs = max(-0.05, ymincurs);
+	ymaxcurs = min(0.05, ymaxcurs);
+	ymingrip = max(-4, ymingrip);
+	ymaxgrip = min(4, ymaxgrip);
+
 	clf;
 	for i = 1:nM
 		model = models{i};
@@ -100,7 +107,7 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 		end
 		if model.converged == 0
 			continue
-		end
+		end		
 		for j = 1:nK
 			%Extract data
 			name = k{j,1};
@@ -115,6 +122,12 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 				tstat = zeros(size(k{j,2}));
 				pval = zeros(size(k{j,2}));
 			end
+			%Raised cosine basis functions... back to temporal basis
+			if j ==1 
+				filt = data.spbasis*filt';
+				se = zeros(size(filt));
+			end
+
 			dt_filt = k{j,3};
 			%If filter length is zero skip this one
 			if length(k{j,2}) < 1
@@ -139,6 +152,8 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 				ymax = ymaxgrip*1.2;
 			end
 			hold on
+			%ymin = min(filt-se)*1.2;
+			%ymax = max(filt+se)*1.2;
 			area(tt, filt+se, ymin, 'FaceColor', [0.8 0.8 0.8])
 			area(tt, filt-se, ymin, 'FaceColor', [1 1 1])
 			plot(tt, filt);

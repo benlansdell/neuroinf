@@ -50,14 +50,22 @@ function [y, tspks, rho, dev] = glmsim_rc(processed, model, data, maxspks)
 		%k_sp(end) = -2;
 		%then set the spike history filter coefficients to zero, since we're generating new spikes and not using data.X's spike history
 		b_hat(sp_indices) = 0;
+
+		%Rescale stim indices
+		%if ~isempty(sp_indices)
+		%	b_hat(sp_indices(end)+1:end) = 20*b_hat(sp_indices(end)+1:end);
+		%end
+
 		%compute the component of mu = e^eta that comes from the remaining filters used
-		mu = glmval(b_hat', data.X, 'log');
+		%mu = glmval(b_hat', data.X, 'log');
+		mu = exp([ones(size(data.X,1),1), data.X]*b_hat');
 		%then for each data point
-		for j = 1:N
+	 	for j = 1:N
 			%compute mu that incorporates the current spike history
 			%k_sp
 			%sp_hist
-			mu_sp = mu(j);%*exp(sp_hist*k_sp);
+			mu_sp = mu(j)*exp(sp_hist*k_sp);
+			%mu_sp = mu(j)*exp(sp_hist*k_sp);
 			%then sample y ~ Pn(exp(eta)) to decide if we spike or not
 			if maxspks == 1
 				yij = min(poissrnd(mu_sp), nMaxSpks);
@@ -67,17 +75,17 @@ function [y, tspks, rho, dev] = glmsim_rc(processed, model, data, maxspks)
 			y(j,i) = yij;
 			rho(j,i) = mu_sp;
 			%If there's a spike, add the time(s) to spikemuas
-			if (yij > 0)
-				mu_sp;
-				yij;
-				if yij > 1e6
-					display(['too many spikes per time bin: bin #: ' num2str(j) ' n. spikes: ' num2str(yij)])
-				end
-				sptime = bs*(j+0.005*(1:yij)');
-				spikemuas(i).times = [spikemuas(i).times; sptime];
-				%Only add this if there is a spike, otherwise set it to zero
-				dev(i) = dev(i) + 2*yij*log(yij);
-			end
+			%if (yij > 0)
+			%	mu_sp;
+			%	yij;
+			%	if yij > 1e6
+			%		display(['too many spikes per time bin: bin #: ' num2str(j) ' n. spikes: ' num2str(yij)])
+			%	end
+			%	sptime = bs*(j+0.005*(1:yij)');
+			%	spikemuas(i).times = [spikemuas(i).times; sptime];
+			%	%Only add this if there is a spike, otherwise set it to zero
+			%	dev(i) = dev(i) + 2*yij*log(yij);
+			%end
 			dev(i) = dev(i)-2*yij*log(mu_sp)-2*yij+2*mu_sp;
 			%then update the spike history filter
 			sp_hist = [sp_hist(2:end), yij];

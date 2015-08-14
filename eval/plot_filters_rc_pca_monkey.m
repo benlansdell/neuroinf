@@ -1,4 +1,4 @@
-function plot_filters_monkey(mdls, data, processed, fn_out)
+function plot_filters_rc_pca_monkey(mdls, data, processed, fn_out)
 	%Plot filters of a fitted GLM model, along with other fit statistics
 	%     
 	%Input:
@@ -11,18 +11,21 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
  	%	datafile = './data/mabel_reaching_5-4-10.mat';
  	%	binsize = 1/100;
  	%	nK_sp = 20;
- 	%	nK_stm = 6;
+ 	%	nK_stm = 20;
  	%	dt_sp = binsize;
  	%	dt_stm = 5/100;
+ 	%	a = 10;
+ 	%	b = 10;
  	%	unitidx = 13;
  	%	const = 'on';
- 	%	fn_out = './testfilters33hz.eps';
+ 	%	fn_out = './testfilters33hz_pca.eps';
  	%	processed = preprocess_monkey(datafile, binsize, unitidx);
- 	%	data = filters_monkey_sp_stm(processed, nK_sp, nK_stm, dt_sp, dt_stm);
+ 	%	data = filters_monkey_sprc_stmrev_pca(processed, nK_sp, nK_stm, a, b, dt_sp, dt_stm);
 	%	model = MLE_glmfit(data, const);
-	%	plot_filters_monkey(models, data, processed, fn_out);
+	%	plot_filters_rc_pca_monkey(model, data, processed, fn_out);
 
-	nU = size(processed.unitnames,1); %number of units
+	%nU = size(processed.cursor,1); %number of units
+	nU = length(mdls); %number of units
 	k = data.k; %filter names and indices
 	nK = size(k,1); %number of filters
 	nP = 3; %number of things to plot about each fitted filter
@@ -67,6 +70,9 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 		model = models{i};
 		idx = 1;
 		b_hat = model.b_hat(idx,:);
+		%Place from PCA space back into original stim space
+		b_hat_stm = data.eigenvectors*b_hat((data.sp_hist(end)+2):end)';
+		b_hat = [b_hat(1:(data.sp_hist(end)+1)), b_hat_stm'];
 		if model.conditioned == 0
 			continue
 		end
@@ -87,11 +93,18 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 		end
 	end
 
+	ymincurs = max(-0.05, ymincurs);
+	ymaxcurs = min(0.05, ymaxcurs);
+	ymingrip = max(-4, ymingrip);
+	ymaxgrip = min(4, ymaxgrip);
+
 	clf;
 	for i = 1:nM
 		model = models{i};
 		idx = 1;
 		b_hat = model.b_hat(idx,:);
+		b_hat_stm = data.eigenvectors*b_hat((data.sp_hist(end)+2):end)';
+		b_hat = [b_hat(1:(data.sp_hist(end)+1)), b_hat_stm'];
 		dev = model.dev{idx};
 		stats = model.stats{idx};
 		const = b_hat(1);
@@ -100,21 +113,21 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 		end
 		if model.converged == 0
 			continue
-		end
+		end		
 		for j = 1:nK
 			%Extract data
 			name = k{j,1};
 			filt = b_hat(k{j,2}+1);
 			%If available, find statistics of fit, otherwise set these to zero
-			if isfield(stats, 'se')	
-				se = stats.se(k{j,2}+1)';
-				tstat = stats.t(k{j,2}+1);
-				pval = stats.p(k{j,2}+1);
-			else
-				se = zeros(size(k{j,2}));
-				tstat = zeros(size(k{j,2}));
-				pval = zeros(size(k{j,2}));
+			se = zeros(size(k{j,2}));
+			tstat = zeros(size(k{j,2}));
+			pval = zeros(size(k{j,2}));
+			%Raised cosine basis functions... back to temporal basis
+			if j ==1 
+				filt = data.spbasis*filt';
+				se = zeros(size(filt));
 			end
+
 			dt_filt = k{j,3};
 			%If filter length is zero skip this one
 			if length(k{j,2}) < 1
@@ -139,6 +152,8 @@ function plot_filters_monkey(mdls, data, processed, fn_out)
 				ymax = ymaxgrip*1.2;
 			end
 			hold on
+			%ymin = min(filt-se)*1.2;
+			%ymax = max(filt+se)*1.2;
 			area(tt, filt+se, ymin, 'FaceColor', [0.8 0.8 0.8])
 			area(tt, filt-se, ymin, 'FaceColor', [1 1 1])
 			plot(tt, filt);

@@ -38,6 +38,45 @@ function plot_filters_monkey_compare(pillow_models, pillow_processed, mdls, data
 	set(gcf, 'PaperPositionMode', 'manual');
 	set(gcf, 'PaperPosition', [0 0 plotwidth plotheight]);
 
+	%Before plotting, collect the largest cursor and grip values to set scale by
+	ymincurs = 0;
+	ymaxcurs = 0;
+	ymingrip = 0;
+	ymaxgrip = 0;
+	for i = 1:nM
+		model = models{i};
+		idx = 1;
+		b_hat = model.b_hat(idx,:);
+		if model.conditioned == 0
+			continue
+		end
+		if model.converged == 0
+			continue
+		end
+		for j = 1:nK
+			%Extract data
+			name = k{j,1};
+			filt = b_hat(k{j,2}+1);
+			if j > 1 & j < 5
+				ymincurs = min(ymincurs, min(filt));
+				ymaxcurs = max(ymaxcurs, max(filt));
+			elseif j ==5
+				ymingrip = min(ymingrip, min(filt));
+				ymaxgrip = max(ymaxgrip, max(filt));
+			end
+		end
+
+%		model = pillow_models{i};
+%		idx = 1;
+%		stimfilt = model.k;
+%		curs = stimfilt(:,1:3);
+%		grip = stimfilt(:,4);
+%		ymincurs = min(ymincurs, min(min(curs)));
+%		ymaxcurs = max(ymaxcurs, max(max(curs)));
+%		ymingrip = min(ymingrip, min(grip));
+%		ymaxgrip = max(ymaxgrip, max(grip));
+	end
+
 	clf;
 	for i = 1:nM
 		model = models{i};
@@ -54,6 +93,13 @@ function plot_filters_monkey_compare(pillow_models, pillow_processed, mdls, data
 		pstimfilt = pmodel.k;
 		pconst = pmodel.dc;
 		psphist = pmodel.ihbas*pmodel.ih;
+
+		if model.conditioned == 0
+			continue
+		end
+		if model.converged == 0
+			continue
+		end
 
 		for j = 1:nK
 			%Extract data
@@ -84,15 +130,23 @@ function plot_filters_monkey_compare(pillow_models, pillow_processed, mdls, data
 			ax=axes('position',sub_pos{j,i},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
 			tt = (0:length(filt)-1)*dt_filt*1000;
 			if j == 1
+				ymin = min(filt-se)*1.2;
+				ymax = max(filt+se)*1.2;
 				tt = tt-max(tt);
+			elseif j > 1 & j < 5
+				ymax = ymaxcurs;
+				ymin = ymincurs;
+				tt = tt-max(tt)/2;
+			else
+				ymax = ymaxgrip;
+				ymin = ymingrip;
+				tt = tt-max(tt)/2;
 			end
 			hold on
-			ymin = min(filt-se)*1.2;
-			ymax = max(filt+se)*1.2;
 			area(tt, filt+se, ymin, 'FaceColor', [0.8 0.8 0.8])
 			area(tt, filt-se, ymin, 'FaceColor', [1 1 1])
 			plot(tt, filt);
-			%ylim([ymin ymax]);
+			ylim([ymin ymax]);
 			if length(tt) > 1
 				xlim([min(tt) max(tt)]);
 			end
@@ -112,15 +166,18 @@ function plot_filters_monkey_compare(pillow_models, pillow_processed, mdls, data
 				%Stim filters
 				pfilt = pstimfilt(:,j-1);
 			end
-			tt = (0:length(pfilt)-1);
+			tt = (1:length(pfilt));
 			if j > 1
 				tt = tt/pmodel.dt;
+				tt = tt-max(tt)/2-1/pmodel.dt/2;
 				%Normalize
-				pfilt = pfilt*pmodel.dt;
+				pfilt = pfilt*pmodel.dt*5;
 			else
-				tt = tt-max(tt);
+				tt = tt;
+				tt = 2*(tt-max(tt))/5;
 			end
 			plot(tt, pfilt, 'r');
+				%xlim([min(tt) max(tt)]);
 		end
 
 		if ischar(processed.unitnames)

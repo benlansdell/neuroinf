@@ -64,7 +64,7 @@ for i = 1:nx
 end
 
 %Must trim extra-trial stim and spikes here, then update slen, swid, etc, just above. 
-trimextratrial(MSTM, SPNDS, processed);
+[MSTM, SPNDS] = trimextratrial(MSTM, SPNDS, processed);
 slen = size(MSTM,1);
 rlen = round(slen/OPRS.dt);
 

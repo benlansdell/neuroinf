@@ -3,4 +3,5 @@ data/
 *.mat
 monkeyresults/
 monkeyresults2/
+GLM_Algorithm_Functions/
 *.m~

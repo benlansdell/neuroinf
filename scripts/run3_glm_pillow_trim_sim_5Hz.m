@@ -10,7 +10,7 @@ samplerate = RefreshRate;
 nRep = 20;
 frames = 9;
 binsize = 1/RefreshRate;
-processed = preprocess_monkey_pillow_5Hz(datafile, binsize, dt, frames);    
+processed = preprocess(datafile, binsize, dt, frames);    
 
 sigma_fr = .25;
 sigma_fr = sigma_fr*samplerate;

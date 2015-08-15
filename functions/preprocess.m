@@ -1,8 +1,8 @@
-function processed = preprocess_monkey_pillow(datafile, binsize, dt, frames)
+function [processed, processed_withheld] = preprocess(datafile, binsize, dt, frames)
 	%Preprocess both spike data and stim data
 	%
 	%Usage:
-	%		processed = preprocess_monkey_pillow(datafile, binsize, dt, unitidx)
+	%		[processed, processed_withheld] = preprocess(datafile, binsize, dt, frames)
 	%
 	%Input:
 	%		datafile = .mat file with data
@@ -21,6 +21,8 @@ function processed = preprocess_monkey_pillow(datafile, binsize, dt, frames)
 	%			unitnames = names of units loaded into spikes
 	%			unitidx = index of unit to fit GLM to
 	%			stacked = stacked stim for computing STA
+	%		processed_withheld is a structure containing 20% of data withheld for
+	%			testing
 	%
 	%Test code:
 	%	datafile = './data/mabel_reaching_5-4-10.mat';
@@ -58,21 +60,14 @@ function processed = preprocess_monkey_pillow(datafile, binsize, dt, frames)
 		end
 	end
 
-    %Stack stim to include future frames from current one
-    processed.stacked = zeros(nB, nS*frames)
-	for idx = 1:frames
-		processed.stacked(1:(end-frames), (idx-1)*nS+1:idx*nS) = processed.stim(1+idx-1:end-frames+idx-1,:);
+    %Stack stim to include past and future frames relative to spike time
+    processed.stacked = zeros(nB, nS*(2*frames+1));
+    offsets = -frames:frames;
+	for idx = 1:length(offsets)
+		offset = offsets(idx);
+		processed.stacked(1+frames:(end-frames), ((idx-1)*nS+1):idx*nS) = ...
+		 processed.stim(1+frames+offset:end-frames+offset,:);
 	end
-	%Trim end of stim, stacked, and offset spike times
-	processed.stacked = processed.stacked(1:end-frames,:);
-	processed.stim = processed.stim(1:end-frames,:);
-	processed.cursor = processed.cursor(1:end-frames,:);
-	processed.grip = processed.grip(1:end-frames,:);
-	processed.spiketrain = processed.spiketrain(1:end-frames,:);
-	%newend = ;
-	%for idx = 1:nU
-	%	processed.spikes{idx} = processed.spikes{idx}(processed.spikes{idx}<newend);
-	%end
 
 	%Note which bins are inside a trial
 	trialstartidx = find(Events_Data(2,:)==TRIALSTART);
@@ -83,19 +78,32 @@ function processed = preprocess_monkey_pillow(datafile, binsize, dt, frames)
 	trialchanges(trialstartbins) = 1;
 	trialchanges(trialendbins) = -1;
 	processed.intrial = cumsum(trialchanges);
-
-	%Remove start of recording, since cursor and grip are zero
-	startidx = find(processed.grip>0,1);
-	processed.stacked = processed.stacked(startidx:end,:);
-	processed.stim = processed.stim(startidx:end,:);
-	processed.cursor = processed.cursor(startidx:end,:);
-	processed.grip = processed.grip(startidx:end,:);
-	processed.spiketrain = processed.spiketrain(startidx:end,:);
-	for idx = 1:nU
-		processed.spikes{idx} = processed.spikes{idx}-(startidx-1);
-		processed.spikes{idx} = processed.spikes{idx}(processed.spikes{idx}>0);
-	end
-	processed.intrial = processed.intrial(startidx:end,:);
 	%Start outside of of a trial
 	processed.intrial(1) = 0;
-	processed.trialstartend = [trialstartbins'-startidx+1, trialendbins'-startidx+1];
+
+	%Split into 20% test and 80% training set
+	nB = size(processed.spiketrain,1);
+	trainmax = ceil(nB*0.8);
+	processed_withheld = processed;
+	trainingidx = (1:nB)<=trainmax;
+	processed.cursor = processed.cursor(trainingidx,:);
+	processed.grip = processed.grip(trainingidx,:);
+	processed.stim = processed.stim(trainingidx,:);
+	processed.spiketrain = processed.spiketrain(trainingidx,:);
+	processed.stacked = processed.stacked(trainingidx,:);
+	processed.intrial = processed.intrial(trainingidx);
+
+	processed_withheld.cursor = processed_withheld.cursor(~trainingidx,:);
+	processed_withheld.grip = processed_withheld.grip(~trainingidx,:);
+	processed_withheld.stim = processed_withheld.stim(~trainingidx,:);
+	processed_withheld.spiketrain = processed_withheld.spiketrain(~trainingidx,:);
+	processed_withheld.stacked = processed_withheld.stacked(~trainingidx,:);
+	processed_withheld.intrial = processed_withheld.intrial(~trainingidx);
+
+	for idx = 1:nU
+	    sp = processed.spikes{idx};
+    	sptrain = sp(sp<trainmax);
+	    sptest = sp(sp>trainmax);
+    	processed.spikes{idx} = sp;
+	    processed_withheld.spikes{idx} = sptest-trainmax;
+	end

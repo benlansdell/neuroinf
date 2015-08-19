@@ -16,9 +16,9 @@ nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
 nRep = 20;                      %no. sim repetitions
-[proc, proc_withheld] = preprocess(datafile, binsize, dt, frames);    
+[proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames);    
 nB = size(proc.stim, 1);
-fn_out = './results_pca_trim/';
+fn_out = './results_pca_move/';
 trim = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%

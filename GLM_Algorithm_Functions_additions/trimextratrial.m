@@ -17,13 +17,14 @@ function [MSTM, SPNDS] = trimextratrial(MSTM, SPNDS, processed)
 	%Make list of intervals to be excluded from data
 	trialendstart = [[1; pt(:,2)], [pt(:,1); nB]];
 	%Chop out spikes that are outside of a trial
-	for idx = 1:190 %size(trialendstart,1)
+	for idx = 1:size(trialendstart,1)
 		trimstart = trialendstart(idx,1);
 		trimend = trialendstart(idx,2);
 		MSTM(trimstart:trimend,:) = [];
 		Dt = (trimend-trimstart+1)/processed.dt;
 		SPNDS((SPNDS*dt>trimstart) & (SPNDS*dt<trimend)) = [];
 		SPNDS(SPNDS*dt>trimend) = SPNDS(SPNDS*dt>trimend)-Dt;
+		trialendstart = trialendstart-(trimend-trimstart+1);
 	end
 end
 

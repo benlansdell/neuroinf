@@ -1,4 +1,4 @@
-function setupfitting_GLM_trim(gg, Stim, maxsize, processed);
+function setupfitting_GLM_trim(gg, Stim, maxsize, processed, trim);
 %  setupfitting_GLM_trim(gg, Stim,maxsize);
 %
 %  Sets global variables for ML estimation of GLM model using 'maxli_GLM'
@@ -53,21 +53,39 @@ if (OPRS.nx ~= swid)
     error('Mismatch between stim width and kernel width');
 end
 rlen = round(slen/OPRS.dt);
+%nx = swid
+%frames = processed.frames
+%nt = 2*frames+1
 nx = OPRS.nx; 
 nt = OPRS.nt;
-ncols = nx*nt;
+ncols = nx*nt
 MSTM = zeros(slen,ncols);
+
 for i = 1:nx
     for j = 1:nt
         MSTM(:,(i-1)*nt+j) = sameconv_monkey(Stim(:,i),gg.ktbas(:,j));
     end
 end
 
-%Must trim extra-trial stim and spikes here, then update slen, rlen, just
-%computed above. 
-[MSTM, SPNDS] = trimextratrial(MSTM, SPNDS, processed);
-slen = size(MSTM,1);
-rlen = round(slen/OPRS.dt);
+%offsets = -frames:frames;
+%Stim = vertcat(zeros(frames, nx), Stim, zeros(frames, nx));
+%nB = size(Stim,1);
+%for i = 1:nx
+%    for j = 1:nt
+%        offset = offsets(j);
+%        jj = (frames+offset+1):(nB-frames+offset);
+%        MSTM(:,(i)*nt-j+1) = Stim(jj, i);
+%    end
+%end
+%size(MSTM)
+%MSTM = MSTM*gg.ktbas;
+
+%Chop out times and spikes that are outside of a trial
+if trim == 1
+    [MSTM, SPNDS] = trimextratrial(MSTM, SPNDS, processed);
+    slen = size(MSTM,1);
+    rlen = round(slen/OPRS.dt);
+end
 
 % ------ Compute Spike matrix MSP - maps ih into correct time sampling ---
 dt = OPRS.dt;

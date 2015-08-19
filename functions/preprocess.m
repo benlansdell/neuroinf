@@ -25,7 +25,7 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
 	%			testing
 	%
 	%Test code:
-	%	datafile = './data/mabel_reaching_5-4-10.mat';
+	%	datafile = './mabel_reaching_5-4-10.mat';
 	%	binsize = 1/100;
 	%	dt = 0.1;
 	%	frames = 4;
@@ -34,18 +34,26 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
 	%Event legend
 	TRIALSTART = 10;
 	TRIALEND = 15;
+	TARGETAPPEARED = 110;
+	TARGETREACHED = 111;
+	ds = 0.01;
 
-    load(datafile) ;
+    load(datafile);
     processed.binsize = binsize;
     processed.cursor = [Cursor_X, Cursor_Y, Cursor_Z];
     processed.grip = Grip_force;
     processed.stim = [processed.cursor, processed.grip];
+    %Normalize
+    %for idx = 1:size(processed.stim,2)
+    %	processed.stim(:,idx) = (processed.stim(:,idx)-mean(processed.stim(:,idx)))/std(processed.stim(:,idx));
+    %end
+    processed.stim = resample(processed.stim, 1000*ds, 1000*binsize);
     processed.dt = dt;
     unitnames = who('CSPIK*');
     processed.unitnames = unitnames;
     processed.frames = frames;
     nU = length(unitnames);
-    nB = size(processed.cursor,1);
+    nB = size(processed.stim,1);
     nS = size(processed.stim,2);
 
     processed.spikes = {};
@@ -54,7 +62,7 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
     	%Get data for idxth spike train
     	eval(['spikes = ' unitnames{idx} ';']);
     	processed.spikes{idx} = spikes*dt;
-    	bins = ceil(spikes/10);
+    	bins = ceil(spikes*dt);
     	for b = bins
 	    	processed.spiketrain(b,idx) = processed.spiketrain(b,idx)+1;
 		end
@@ -63,15 +71,23 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
     %Stack stim to include past and future frames relative to spike time
     processed.stacked = zeros(nB, nS*(2*frames+1));
     offsets = -frames:frames;
-	for idx = 1:length(offsets)
-		offset = offsets(idx);
-		processed.stacked(1+frames:(end-frames), ((idx-1)*nS+1):idx*nS) = ...
-		 processed.stim(1+frames+offset:end-frames+offset,:);
+	nx = nS;
+	nt = length(offsets);
+	stim = vertcat(zeros(frames, nx), processed.stim, zeros(frames, nx));
+	nB = size(stim,1);
+	for i = 1:nx
+	    for j = 1:nt
+	        offset = offsets(j);
+	        jj = (frames+offset+1):(nB-frames+offset);
+	        processed.stacked(:,(i)*nt-j+1) = stim(jj, i);
+	    end
 	end
 
 	%Note which bins are inside a trial
 	trialstartidx = find(Events_Data(2,:)==TRIALSTART);
 	trialendidx = find(Events_Data(2,:)==TRIALEND);
+	%trialstartidx = find(Events_Data(2,:)==TARGETAPPEARED);
+	%trialendidx = find(Events_Data(2,:)==TARGETREACHED);
 	trialstartbins = ceil(Events_Data(1,trialstartidx)*dt);
 	trialendbins = ceil(Events_Data(1,trialendidx)*dt);
 	trialchanges = zeros(size(processed.grip));
@@ -80,6 +96,7 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
 	processed.intrial = cumsum(trialchanges);
 	%Start outside of of a trial
 	processed.intrial(1) = 0;
+	processed.trialstartend = [trialstartbins', trialendbins'];
 
 	%Split into 20% test and 80% training set
 	nB = size(processed.spiketrain,1);

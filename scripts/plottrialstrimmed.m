@@ -1,7 +1,8 @@
-datafile = './data/mabel_reaching_5-4-10.mat';
+datafile = './mabel_reaching_5-4-10.mat';
 binsize = 1/100;
+dt = 1/10;
 unitidx = 13;
-processed = preprocess_monkey(datafile, binsize, unitidx);
+processed = preprocess(datafile, binsize, dt, unitidx);
 
 intrial = processed.intrial;
 cursorintrial = processed.cursor(intrial==0, :);

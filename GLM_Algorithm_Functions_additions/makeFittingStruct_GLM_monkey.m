@@ -1,4 +1,4 @@
-function gg = makeFittingStruct_GLM_monkey(sta,DTsim,glmstruct,cellnumToFit);
+function gg = makeFittingStruct_GLM(sta,DTsim,glmstruct,cellnumToFit);
 % gg = makeFittingStruct_GLM(sta,DTsim,glmstruct,cellnumToFit);
 %
 % Initialize parameter structure for fitting of GLM model,
@@ -61,11 +61,13 @@ if (nargin >= 3)
     gg.dc = glmstruct.dc;
     gg.ih = glmstruct.ih;
     gg.iht = glmstruct.iht;
+
     %---Extract correct ih basis params, if present----
     if isfield(glmstruct, 'ihbasprs')
         if ~isempty(glmstruct.ihbasprs);
             ihbasprs = glmstruct.ihbasprs;
             [iht,ihbas] = makeBasis_PostSpike(ihbasprs,DTsim);
+
             % -- Do some error-checking ----
             if length(iht) ~= length(glmstruct.iht)
                 error('mismatch between iht and h-kernel params ihbasprs');
@@ -73,6 +75,7 @@ if (nargin >= 3)
             if size(glmstruct.ih,2)>1 & (nargin < 4)
                 error('multi-cell glm struct passed in without cell # to fit');
             end
+
             %--- Put glmstruct params into gg ----
             gg.iht = glmstruct.iht;
             gg.ihbas = ihbas;
@@ -88,7 +91,10 @@ if (nargin >= 3)
                 gg.ih = inv(ihbas'*ihbas)*ihbas'*[ih1 ih2];
                 gg.dc = glmstruct.dc(cellnumToFit);
             end
+
         end
     end
+
+
 end
 

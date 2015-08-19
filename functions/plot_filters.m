@@ -10,6 +10,7 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 	nM = length(models);
 	names = {'spike history', 'curs x', 'curs y', 'curs z', 'grip'};
 	nK = length(names);
+	nF = 2*(processed.frames)+1;
 
 	%Prepare subplots
 	plotheight=nM+4;
@@ -42,8 +43,9 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 		model = models{i};
 		idx = 1;
 		stimfilt = model.k;
-		curs = stimfilt(:,1:3);
-		grip = stimfilt(:,4);
+		curs = stimfilt(1:3*nF);
+		curs = reshape(curs, nF, []);
+		grip = stimfilt(3*nF+1:end);
 		ymincurs = min(ymincurs, min(min(curs)));
 		ymaxcurs = max(ymaxcurs, max(max(curs)));
 		ymingrip = min(ymingrip, min(grip));
@@ -54,6 +56,7 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 		model = models{i};
 		idx = 1;
 		stimfilt = model.k;
+		stimfilt = reshape(stimfilt, nF, []);
 		const = model.dc;
 		sphist = model.ihbas*model.ih;
 		for j = 1:(nK)

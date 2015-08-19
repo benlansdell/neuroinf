@@ -1,4 +1,4 @@
-function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed);
+function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed, trim);
 %  [ggnew,fval,H] = MLfit_GLM(gg,Stim,optimArgs);
 % 
 %  Computes the ML estimate for GLM params, using grad and hessians.
@@ -25,7 +25,7 @@ else
 end
 
 % Set initial params
-prs0 = extractFitPrs_GLM_trim(gg,Stim,MAXSIZE,processed);
+prs0 = extractFitPrs_GLM_trim(gg,Stim,MAXSIZE,processed, trim);
 
 % minimize negative log likelihood
 [prs,fval] = fminunc(@Loss_GLM_logli,prs0,opts);
@@ -41,4 +41,3 @@ gg = reinsertFitPrs_GLM(gg,prs);
 % HessCheck(@Loss_GLM_logli,prs0,opts);
 % HessCheck_Elts(@Loss_GLM_logli, [1 12],prs0,opts);
 % tic; [lival,J,H]=Loss_GLM_logli(prs0); toc;
-

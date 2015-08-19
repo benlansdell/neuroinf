@@ -9,7 +9,7 @@ function [tsp,Vmem,Ispk] = simGLM(glmprs,Stim, time_limit);
 % Dynamics:  Filters the Stimulus with glmprs.k, passes this through a
 % nonlinearity to obtain the point-process conditional intensity.  Add a
 % post-spike current to the linear input after every spike.
-if (nargin < 3) time_limit = 60; end
+if (nargin < 3) time_limit = 5; end
 
 if size(glmprs.k,3) > 1  % Run "coupled" GLM model if multiple cells present
     if nargout <= 2

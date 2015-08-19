@@ -12,7 +12,7 @@ function [tsp,Vmem,Ispk] = simGLMcpl(glmprs,Stim, time_limit);
 
 % --------------- Check Inputs ----------------------------------
 global RefreshRate;
-if (nargin < 3) time_limit = 60; end
+if (nargin < 3) time_limit = 5; end
 
 
 ncells = size(glmprs.k,3);

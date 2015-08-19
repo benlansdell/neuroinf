@@ -47,19 +47,19 @@ for icell = 1:nU
     ggs{icell} = gg;
 
     %Simulation with test stim
-    disp(num2str(icell));
-    stim = proc_withheld.stim;
-    stim = stim/p;
-    Tt = size(proc_withheld.stim,1);
-    Rt_glm = zeros(1,Tt);
-    for ir = 1:nRep
-        ir
-        [iR_glm,vmem,Ispk] = simGLM_monkey(ggs{icell}, stim);
-        Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
-    end
-    Rt_glm = Rt_glm'/nRep + 1e-8;
+    %disp(num2str(icell));
+    %stim = proc_withheld.stim;
+    %stim = stim/p;
+    %Tt = size(proc_withheld.stim,1);
+    %Rt_glm = zeros(1,Tt);
+    %for ir = 1:nRep
+    %    ir
+    %    [iR_glm,vmem,Ispk] = simGLM_monkey(ggs{icell}, stim);
+    %    Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+    %end
+    %Rt_glm = Rt_glm'/nRep + 1e-8;
     save([fn_out '/GLM_cell_' num2str(icell) '.mat'],...
-        'gg', 'Rt_glm');
+        'gg'); %, 'Rt_glm');
 end
 
 %Save all

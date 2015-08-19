@@ -7,6 +7,8 @@ function gg = makeFittingStruct_GLM(sta,DTsim,glmstruct,cellnumToFit);
 % Inputs:  sta = initial guess at kernel (or use all zeros if unknown)
 
 % Set up structure
+global RefreshRate;
+
 gg.k = [];
 gg.dc = 0;
 gg.ih = [];
@@ -41,9 +43,9 @@ gg.kbasprs = kbasprs;
 % Set up basis for post-spike kernel
 
 ihbasprs.ncols = 5;  % Number of basis vectors for post-spike kernel
-ihbasprs.hpeaks = [DTsim*1 5];  % Peak location for first and last vectors
+ihbasprs.hpeaks = [DTsim*1 RefreshRate*.2];  % Peak location for first and last vectors
 ihbasprs.b = .4;  % How nonlinear to make spacings
-ihbasprs.absref = DTsim*1; % absolute refractory period 
+ihbasprs.absref = DTsim*5; % absolute refractory period 
 [iht,ihbas,ihbasis] = makeBasis_PostSpike(ihbasprs,DTsim);
 gg.iht = iht;
 gg.ihbas = ihbas;

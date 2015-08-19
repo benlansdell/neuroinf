@@ -19,7 +19,7 @@ nRep = 20;                      %no. sim repetitions
 nB = size(proc.stim, 1);
 fn_out = './results_gauss_trim/';
 trim = 1;
-
+pca = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,7 +43,7 @@ for icell = 1:nU
     gg0.tspi = 1;
 
     opts = {'display', 'iter', 'maxiter', 100};
-    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim);
+    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca);
     ggs{icell} = gg;
 
     %Simulation with test stim

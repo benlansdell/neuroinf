@@ -20,6 +20,7 @@ nRep = 20;                      %no. sim repetitions
 nB = size(proc.stim, 1);
 fn_out = './results_pca/';
 trim = 0;
+pca = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -36,7 +37,7 @@ for icell = 1:nU
     stacked = proc.stacked;
     stacked = stacked/p;
     sta = stacked'*sptrain/sum(sptrain)-mean(stacked,1)'; 
-    sta = reshape(sta,nF,[]);
+    %sta = reshape(sta,nF,[]);
 
     %Take PCA of each stim component separately
     vC = zeros(p, nS*nK);
@@ -56,7 +57,7 @@ for icell = 1:nU
     gg0.tspi = 1;
 
     opts = {'display', 'iter', 'maxiter', 100};
-    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim);
+    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca);
     ggs{icell} = gg;
 
     %Simulation with test stim

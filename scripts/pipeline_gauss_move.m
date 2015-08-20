@@ -67,10 +67,78 @@ end
 %Save all
 save([fn_out '/all_units.mat'], 'ggs');
 
+%%%%%%%%%%%%%%%%%
+%Simulate models%
+%%%%%%%%%%%%%%%%%
+
+for icell = 1:nU
+    load([fn_out '/GLM_cell_' num2str(icell) '.mat']);
+    %Simulation with test stim
+    disp(num2str(icell));
+    stim = proc_withheld.stim;
+    stim = stim/p;
+    Tt = size(proc_withheld.stim,1);
+    Rt_glm = zeros(1,Tt);
+    for ir = 1:nRep
+        ir
+        [iR_glm,vmem,Ispk] = simGLM_monkey(gg, stim);
+        Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+    end
+    Rt_glm = Rt_glm'/nRep + 1e-8;
+    save([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm');
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %3 Plot uncoupled filters%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 plot_filters(ggs, proc, [fn_out '/all_units_filters.eps']);
+
+%Compare to other filters...
+ggs_gauss = load(['./results_gauss/all_units.mat'], 'ggs');
+ggs_gauss_move = load(['./results_gauss_move/all_units.mat'], 'ggs');
+ggs_gauss_move_5hz = load(['./results_gauss_move_5hz/all_units.mat'], 'ggs');
+ggs_gauss_trim = load(['./results_gauss_trim/all_units.mat'], 'ggs');
+ggs_pca = load(['./results_pca/all_units.mat'], 'ggs');
+ggs_pca_move = load(['./results_pca_move/all_units.mat'], 'ggs');
+ggs_pca_trim = load(['./results_pca_trim/all_units.mat'], 'ggs');
+ggs_rc = load(['./results_rc/all_units.mat'], 'ggs');
+ggs_rc_move = load(['./results_rc_move/all_units.mat'], 'ggs');
+ggs_rc_trim = load(['./results_rc_trim/all_units.mat'], 'ggs');
+ggs_std_10hz = load(['./results_std_10hz/all_units.mat'], 'ggs');
+ggs_std_10hz_move = load(['./results_std_10hz_move/all_units.mat'], 'ggs');
+ggs_std_10hz_trim = load(['./results_std_10hz_trim/all_units.mat'], 'ggs');
+ggs_std_5hz = load(['./results_std_5hz/all_units.mat'], 'ggs');
+ggs_std_5hz_move = load(['./results_std_5hz_move/all_units.mat'], 'ggs');
+ggs_std_5hz_trim = load(['./results_std_5hz_trim/all_units.mat'], 'ggs');
+
+ggs_gauss =ggs_gauss.ggs;
+ggs_gauss_move =ggs_gauss_move.ggs;
+ggs_gauss_move_5hz =ggs_gauss_move_5hz.ggs;
+ggs_gauss_trim =ggs_gauss_trim.ggs;
+ggs_pca =ggs_pca.ggs;
+ggs_pca_move =ggs_pca_move.ggs;
+ggs_pca_trim =ggs_pca_trim.ggs;
+ggs_rc =ggs_rc.ggs;
+ggs_rc_move =ggs_rc_move.ggs;
+ggs_rc_trim =ggs_rc_trim.ggs;
+ggs_std_10hz =ggs_std_10hz.ggs;
+ggs_std_10hz_move =ggs_std_10hz_move.ggs;
+ggs_std_10hz_trim =ggs_std_10hz_trim.ggs;
+ggs_std_5hz =ggs_std_5hz.ggs;
+ggs_std_5hz_move  =ggs_std_5hz_move .ggs;
+ggs_std_5hz_trim  =ggs_std_5hz_trim .ggs;
+
+plot_filters_compare({ggs_gauss ,ggs_gauss_move, ggs_gauss_trim}, proc, ['./compare_datatrimming_gauss_filters.eps']);
+plot_filters_compare({ggs_rc ,ggs_rc_move, ggs_rc_trim}, proc, ['./compare_datatrimming_rc_filters.eps']);
+plot_filters_compare({ggs_pca ,ggs_pca_move, ggs_pca_trim}, proc, ['./compare_datatrimming_pca_filters.eps']);
+plot_filters_compare({ggs_std_5hz ,ggs_std_5hz_move, ggs_std_5hz_trim}, proc, ['./compare_datatrimming_std5hz_filters.eps']);
+plot_filters_compare({ggs_std_10hz ,ggs_std_10hz_move, ggs_std_10hz_trim}, proc, ['./compare_datatrimming_std10hz_filters.eps']);
+
+refreshrates = [100, 5, 10];
+plot_filters_compare({ggs_gauss_move ,ggs_std_5hz_move, ggs_std_10hz_trim}, proc, ['./compare_gauss_std_filters.eps'], refreshrates);
+plot_filters_compare({ggs_gauss_move ,ggs_rc_move, ggs_pca_move}, proc, ['./compare_gauss_rc_pca_filters.eps']);
+plot_filters_compare({ggs_gauss_move ,ggs_gauss_move_5hz}, proc, ['./compare_gauss_5hz_filters.eps']);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %4 Plot uncoupled simulations%
@@ -156,7 +224,7 @@ ggs_cpl = {};
 %For testing
 maxiter = 10;
 %For reals
-maxiter = 3;
+maxiter = 100;
 for icell = 1:nU
     disp(num2str(icell));
     stim = proc.stim;
@@ -177,7 +245,7 @@ for icell = 1:nU
     sta = reshape(sta,nF,[]);
 
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt);
+    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt,Dt);
     gg0.tsp = resp';
     gg0.tspi = 1;
 

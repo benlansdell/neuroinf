@@ -10,7 +10,7 @@ dt = ds*RefreshRate;            %Time scale spike times are resovled at,
 datafile = './mabel_reaching_5-4-10.mat';
 nU = 45;                        %no. units
 nS = 4;                         %no. stim components
-frames = 200;                   %no. stim frames 
+frames = 20;                   %no. stim frames 
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
@@ -20,7 +20,7 @@ nB = size(proc.stim, 1);
 fn_out = './results_gauss_move_5hz/';
 trim = 1;
 pca = 0;
-Dt = 20;
+Dt = 4;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -71,24 +71,6 @@ save([fn_out '/all_units.mat'], 'ggs');
 %3 Plot uncoupled filters%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 plot_filters(ggs, proc, [fn_out '/all_units_filters.eps']);
-
-for icell = 1:nU
-    load([fn_out '/GLM_cell_' num2str(icell) '.mat']);
-    %Simulation with test stim
-    disp(num2str(icell));
-    stim = proc_withheld.stim;
-    stim = stim/p;
-    Tt = size(proc_withheld.stim,1);
-    Rt_glm = zeros(1,Tt);
-    for ir = 1:nRep
-        ir
-        [iR_glm,vmem,Ispk] = simGLM_monkey(gg, stim);
-        Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
-    end
-    Rt_glm = Rt_glm'/nRep + 1e-8;
-    save([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm');
-end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %4 Plot uncoupled simulations%
@@ -163,10 +145,11 @@ end
 %Fit network model%
 %%%%%%%%%%%%%%%%%%%
 
-goodunits = [3 4 6 7 8 9 14 15 16 17 18 19 21 23 27 31 33 34 35 36 37 39 40 41];
+%goodunits = [3 4 6 7 8 9 14 15 16 17 18 19 21 23 27 31 33 34 35 36 37 39 40 41];
+goodunits = [1 2 3];
 nU = length(goodunits);
 %Remove the 'bad' units from the dataset
-[proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames);    
+%[proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames);    
 [proc, proc_withheld] = remove_bad_units(goodunits, proc, proc_withheld);
 
 %Run fitting...
@@ -174,7 +157,7 @@ ggs_cpl = {};
 %For testing
 maxiter = 10;
 %For reals
-maxiter = 100;
+%maxiter = 100;
 for icell = 1:nU
     disp(num2str(icell));
     stim = proc.stim;
@@ -220,30 +203,12 @@ for icell = 1:nU
     %    Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
     %end
     %Rt_glm = Rt_glm'/nRep + 1e-8;
-    save([fn_out '/GLM_coupled_cell_' num2str(icell) '.mat'],...
-        'gg'); %, 'Rt_glm');
+    %save([fn_out '/GLM_coupled_cell_' num2str(icell) '.mat'],...
+    %    'gg'); %, 'Rt_glm');
 end
 
 %Save all
-save([fn_out '/all_units_network.mat'], 'ggs_cpl');
+%save([fn_out '/all_units_network.mat'], 'ggs_cpl');
 
 %Plot
-plot_filters_network(ggs_cpl, proc, [fn_out '/all_units_network_filters.eps']);
-
-
-%Simulate network model...
-for icell = 1:nU
-    %Simulation with test stim
-    disp(num2str(icell));
-    stim = proc_withheld.stim;
-    stim = stim/p;
-    Tt = size(proc_withheld.stim,1);
-    Rt_glm = zeros(1,Tt);
-    for ir = 1:nRep
-        ir
-        [iR_glm,vmem,Ispk] = simGLM_monkey(ggs{icell}, stim);
-        Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
-    end
-    Rt_glm = Rt_glm'/nRep + 1e-8;
-    save([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm');
-end
+plot_filters_network(ggs_cpl, proc, [fn_out '/test_all_units_network_filters.eps']);

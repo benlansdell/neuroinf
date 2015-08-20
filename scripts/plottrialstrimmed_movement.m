@@ -2,10 +2,10 @@ datafile = './mabel_reaching_5-4-10.mat';
 binsize = 1/100;
 dt = 1/10;
 unitidx = 13;
-processed = preprocess(datafile, binsize, dt, unitidx);
+processed = preprocess_movementinit(datafile, binsize, dt, unitidx);
 
 intrial = processed.intrial;
-cursorintrial = processed.cursor(intrial==1, :);
+cursorintrial = processed.cursor(intrial==1,:);
 gripintrial = processed.grip(intrial==1);
 
 figure
@@ -30,4 +30,4 @@ title('Cursor Z')
 subplot(2,2,4)
 plot(tt, autotorqueGrip);
 title('Grip force');		
-saveplot(gcf, ['stim_autocorrelations_trim.eps'], 'eps', [6 6]);
+saveplot(gcf, ['stim_autocorrelations_trimmed_movement.eps'], 'eps', [6 6]);

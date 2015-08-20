@@ -34,6 +34,7 @@ function plot_filters_monkeypillownetwork(models, processed, fn_out)
 	spacey=0.4;
 	fontsize=5;    
 	sub_pos=subplot_pos(plotwidth,plotheight,leftedge,rightedge,bottomedge,topedge,subplotsx,subplotsy,spacex,spacey);
+	sub_pos = fliplr(sub_pos);
 
 	%setting the Matlab figure
 	f=figure;
@@ -56,7 +57,9 @@ function plot_filters_monkeypillownetwork(models, processed, fn_out)
 		const = model.dc;
 		sphist = model.ihbas*model.ih;
 		couples = model.ihbas*model.ih2;
-		spfilters = [couples(:,topunits(1:(ii-1))), couples(:,topunits((ii+1):end))];
+		othertopunits = [topunits(1:(ii-1)), topunits((ii+1):end)];
+		othertopunits(othertopunits > i) = othertopunits(othertopunits > i) - 1;
+		spfilters = couples(:,othertopunits);
 		ymincurs = min(ymincurs, min(min(stimfilt(:,1:3))));
 		ymaxcurs = max(ymaxcurs, max(max(stimfilt(:,1:3))));
 		ymingrip = min(ymingrip, min(min(stimfilt(:,4))));
@@ -73,7 +76,9 @@ function plot_filters_monkeypillownetwork(models, processed, fn_out)
 		const = model.dc;
 		sphist = model.ihbas*model.ih;
 		couples = model.ihbas*model.ih2;
-		spfilters = [couples(:,topunits(1:(ii-1))), sphist, couples(:,topunits((ii+1):end))];
+		othertopunits = [topunits(1:(ii-1)), topunits((ii+1):end)];
+		othertopunits(othertopunits > i) = othertopunits(othertopunits > i) - 1;
+		spfilters = couples(:,othertopunits);
 
 		ax=axes('position',sub_pos{1,ii},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
 		name = processed.unitnames{i};
@@ -86,10 +91,10 @@ function plot_filters_monkeypillownetwork(models, processed, fn_out)
 		if length(tt) > 1
 			xlim([min(tt) max(tt)]);
 		end
-		if i == nM
+		if ii == 1
 			title(name);
 		end
-		if i == 1
+		if ii == nM
 			xlabel('time (ms)');
 		end
 
@@ -98,9 +103,18 @@ function plot_filters_monkeypillownetwork(models, processed, fn_out)
 			if j == ii
 				plot(0,0)
 				axis off
+				if j == 1
+					name = processed.unitnames{topunits(j)};
+					title(name);
+				end
 			else
+				if j > ii
+					jp = j-1;
+				else
+					jp = j;
+				end
 				name = processed.unitnames{topunits(j)};
-				filt = spfilters(:,j);
+				filt = spfilters(:,jp);
 				filt = flipud(filt);
 				dt_filt = model.dt*RefreshRate;
 				tt = (0:length(filt)-1)*dt_filt;
@@ -110,10 +124,10 @@ function plot_filters_monkeypillownetwork(models, processed, fn_out)
 				if length(tt) > 1
 					xlim([min(tt) max(tt)]);
 				end
-				if i == nM
+				if ii == 1
 					title(name);
 				end
-				if i == 1
+				if ii == nM
 					xlabel('time (ms)');
 				end
 			end
@@ -125,6 +139,7 @@ function plot_filters_monkeypillownetwork(models, processed, fn_out)
 			filt = stimfilt(:,j-nUtop);
 			dt_filt = model.dt*RefreshRate;
 			tt = (0:length(filt)-1)*dt_filt;
+			tt = (tt-max(tt)/2)/model.dt;
 			if j == nUtop+4
 				plot(tt, filt, 'r');
 				ylim([ymingrip, ymaxgrip])		
@@ -135,10 +150,10 @@ function plot_filters_monkeypillownetwork(models, processed, fn_out)
 			if length(tt) > 1
 				xlim([min(tt) max(tt)]);
 			end
-			if i == nM
+			if ii == 1
 				title(name);
 			end
-			if i == 1
+			if ii == nM
 				xlabel('time (ms)');
 			end
 		end

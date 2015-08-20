@@ -20,6 +20,7 @@ nB = size(proc.stim, 1);
 fn_out = './results_gauss/';
 trim = 0;
 pca = 0;
+Dt = 10;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -39,7 +40,7 @@ for icell = 1:nU
     sta = reshape(sta,nF,[]);
 
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt);
+    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt,Dt);
     gg0.tsp = resp';
     gg0.tspi = 1;
 

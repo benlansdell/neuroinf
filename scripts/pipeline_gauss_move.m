@@ -20,6 +20,7 @@ nB = size(proc.stim, 1);
 fn_out = './results_gauss_move/';
 trim = 1;
 pca = 0;
+Dt = 10;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -39,7 +40,7 @@ for icell = 1:nU
     sta = reshape(sta,nF,[]);
 
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt);
+    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt,Dt);
     gg0.tsp = resp';
     gg0.tspi = 1;
 
@@ -143,3 +144,70 @@ end
 %%%%%%%%%%%%%%%%%%%
 %Fit network model%
 %%%%%%%%%%%%%%%%%%%
+
+goodunits = [3 4 6 7 8 9 14 15 16 17 18 19 21 23 27 31 33 34 35 36 37 39 40 41];
+nU = length(goodunits);
+%Remove the 'bad' units from the dataset
+[proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames);    
+[proc, proc_withheld] = remove_bad_units(goodunits, proc, proc_withheld);
+
+%Run fitting...
+ggs_cpl = {};
+%For testing
+maxiter = 10;
+%For reals
+maxiter = 3;
+for icell = 1:nU
+    disp(num2str(icell));
+    stim = proc.stim;
+    stim = stim/p;
+    resp = proc.spikes{icell};
+    sptrain = proc.spiketrain(:,icell);
+
+    nicell = [(1:icell-1), (icell+1:nU)];
+    %Add coupling to the other spike trains
+    coupled = proc.spikes(nicell);
+    for idx = 1:length(coupled)
+        coupled{idx} = coupled{idx}';
+    end
+
+    stacked = proc.stacked;
+    stacked = stacked/p;
+    sta = stacked'*sptrain/sum(sptrain)-mean(stacked,1)'; 
+    sta = reshape(sta,nF,[]);
+
+    nspk(icell) = sum(sptrain);
+    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt);
+    gg0.tsp = resp';
+    gg0.tspi = 1;
+
+    %Other spike trains
+    gg0.tsp2 = coupled;
+    %Add terms for other spike filters
+    gg0.ih = zeros(size(gg0.ih,1),nU);
+
+    opts = {'display', 'iter', 'maxiter', maxiter};
+    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca);
+    ggs_cpl{icell} = gg;
+
+    %Simulation with test stim
+    %disp(num2str(icell));
+    %stim = proc_withheld.stim;
+    %stim = stim/p;
+    %Tt = size(proc_withheld.stim,1);
+    %Rt_glm = zeros(1,Tt);
+    %for ir = 1:nRep
+    %    ir
+    %    [iR_glm,vmem,Ispk] = simGLM_monkey(ggs{icell}, stim);
+    %    Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+    %end
+    %Rt_glm = Rt_glm'/nRep + 1e-8;
+    save([fn_out '/GLM_coupled_cell_' num2str(icell) '.mat'],...
+        'gg'); %, 'Rt_glm');
+end
+
+%Save all
+save([fn_out '/all_units_network.mat'], 'ggs_cpl');
+
+%Plot
+plot_filters_network(ggs_cpl, proc, [fn_out '/all_units_network_filters.eps']);

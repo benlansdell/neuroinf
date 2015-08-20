@@ -10,8 +10,8 @@ function plot_filters_monkeypillownetwork(models, processed, fn_out)
 	nM = length(models);
 	names = {'spike history', 'curs x', 'curs y', 'curs z', 'grip'};
 
-	%Only plot the top 10 units by firing rate:
-	nUtop = 8;
+	%Only plot the top 8 units by firing rate:
+	nUtop = min(8, nM);
 	nK = nUtop+5;
 	topunits = [];
 	for idx = 1:nM

@@ -82,6 +82,7 @@ save([fn_out '/all_units.mat'], 'ggs');
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %3 Plot uncoupled filters%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
+load([fn_out '/all_units.mat']);
 plot_filters(ggs, proc, [fn_out '/all_units_filters.eps']);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

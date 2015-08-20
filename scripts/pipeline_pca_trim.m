@@ -40,6 +40,8 @@ for icell = 1:nU
     %sta = reshape(sta,nF,[]);
 
     %Take PCA of each stim component separately
+    %figure
+    nK = 5;
     vC = zeros(p, nS*nK);
     for idx = 1:nS
         ii = (nF*(idx-1)+1):(nF*idx);
@@ -49,7 +51,12 @@ for icell = 1:nU
         v = v(:,iC);        
         jj = (nK*(idx-1)+1):(nK*idx);
         vC(ii,jj) = v(:,1:nK);
+
+        %Plot PCA components
+        %subplot(1,nS,idx)
+        %plot(v(:,1:nK));
     end    
+    %saveplot(gcf, './stim_PCA_components.eps', 'eps', [10,5])
 
     nspk(icell) = sum(sptrain);
     gg0 = makeFittingStruct_GLM_PCA_monkey(sta, dt, vC(:,1:(nK*nS)));

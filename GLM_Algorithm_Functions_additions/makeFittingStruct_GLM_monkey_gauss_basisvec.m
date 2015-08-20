@@ -1,4 +1,4 @@
-function gg = makeFittingStruct_GLM_monkey(sta,DTsim,glmstruct,cellnumToFit);
+function gg = makeFittingStruct_GLM_monkey(sta,DTsim,Dt, glmstruct,cellnumToFit);
 % gg = makeFittingStruct_GLM(sta,DTsim,glmstruct,cellnumToFit);
 %
 % Initialize parameter structure for fitting of GLM model,
@@ -28,7 +28,7 @@ gg.couplednums = [];
 
 [nkt,nkx] = size(sta);
 % % ----- Set up temporal basis for stimulus kernel -----------
-Dt = 10;
+%Dt = 10;
 center = (nkt-1)/2+1;
 indices = [fliplr(center:-Dt:2*Dt), (center+Dt):Dt:(nkt-2*Dt)];
 nk = length(indices);
@@ -64,7 +64,7 @@ gg.k = gg.ktbas*gg.kt;
 
 % % ==================================================================
 % If full param struct passed in, match other params as well
-if (nargin >= 3) 
+if (nargin >= 4) 
     gg.dc = glmstruct.dc;
     gg.ih = glmstruct.ih;
     gg.iht = glmstruct.iht;
@@ -84,7 +84,7 @@ if (nargin >= 3)
             gg.iht = glmstruct.iht;
             gg.ihbas = ihbas;
             gg.ihbasprs = ihbasprs;
-            if nargin == 3  % single-cell only
+            if nargin == 4  % single-cell only
                 gg.ih = inv(ihbas'*ihbas)*ihbas'*glmstruct.ih;
                 gg.dc = glmstruct.dc;
             else % mulitcell-cell

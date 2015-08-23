@@ -153,9 +153,10 @@ for icell = 1:nU
     gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
     
     tstart = ceil(600*RefreshRate);
-    tend = ceil(900*RefreshRate);
+    tend = ceil(750*RefreshRate);
     fn_in = [fn_out '/GLM_cell_' num2str(icell) '.mat'];
-    load(fn_in,'gg','Rt_glm');
+    load([fn_out '/GLM_cell_' num2str(icell) '.mat'])
+    load([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'])
     tidx = tstart:tend;
     truesp = proc_withheld.spiketrain(tidx,icell);
     pillowsimsp = Rt_glm(tidx);
@@ -187,7 +188,7 @@ for icell = 1:nU
     tstart = ceil(600*RefreshRate);
     tend = ceil(605*RefreshRate);
     tidx = tstart:tend;
-    truesp = proc_withheld.spikes(tidx,icell);
+    truesp = proc_withheld.spiketrain(tidx,icell);
     pillowsimsp = Rt_glm(tidx);
     subplot(2,1,1)
     hold on
@@ -279,3 +280,92 @@ save([fn_out '/all_units_network.mat'], 'ggs_cpl');
 
 %Plot
 plot_filters_network(ggs_cpl, proc, [fn_out '/all_units_network_filters.eps']);
+
+load([fn_out '/all_units_network.mat'])
+nU = length(ggs_cpl);
+%Simulate network model...
+for icell = 1:nU
+    %Simulation with test stim
+    disp(num2str(icell));
+    stim = proc_withheld.stim;
+    stim = stim/p;
+    Tt = size(proc_withheld.stim,1);
+    Rt_glm = zeros(1,Tt);
+    for ir = 1:nRep
+        ir
+        [iR_glm,vmem,Ispk] = simGLMcpl_monkey(ggs_cpl{icell}, stim);
+        Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+    end
+    Rt_glm = Rt_glm'/nRep + 1e-8;
+    save([fn_out '/GLM_coupled_simulation_' num2str(icell) '.mat'], 'Rt_glm');
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%4 Plot coupled simulations%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+for icell = 1:length(goodunits)
+    clf
+    sigma_fr = .25;
+    sigma_fr = sigma_fr*RefreshRate;
+    sz = sigma_fr*3*2;
+    x = linspace(-sz/2, sz/2, sz);
+    gaussFilter_fr = exp(-x.^2/(2*sigma_fr^2));
+    gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
+    
+    tstart = ceil(600*RefreshRate);
+    tend = ceil(750*RefreshRate);
+    fn_in = [fn_out '/GLM_cell_' num2str(icell) '.mat'];
+    load([fn_out '/GLM_cell_' num2str(icell) '.mat'])
+    load([fn_out '/GLM_coupled_simulation_' num2str(icell) '.mat'])
+    tidx = tstart:tend;
+    truesp = proc_withheld.spiketrain(tidx,goodunits(icell));
+    pillowsimsp = Rt_glm(tidx);
+    subplot(2,1,1)
+    hold on
+    plot(tidx*proc.binsize, 500*proc.grip(tidx), 'k');
+    plot(tidx*proc.binsize, proc.cursor(tidx,1), 'b');
+    plot(tidx*proc.binsize, proc.cursor(tidx,2), 'Color', [0 0.6 0]);
+    plot(tidx*proc.binsize, proc.cursor(tidx,3), 'r');
+    legend('Grip', 'Curs x', 'Curs Y', 'Curs Z')
+    subplot(2,1,2)
+    gftruesp = conv(truesp, gaussFilter_fr, 'same');
+    gfpillowsimsp = conv(pillowsimsp, gaussFilter_fr, 'same');
+    plot(tidx*proc.binsize, gftruesp, tidx*proc.binsize, gfpillowsimsp);
+    title('n rep: 20')
+    xlabel('seconds')
+    ylabel('predicted probability spiking')
+    legend('true spike train', 'Pillow''s GLM')
+    saveplot(gcf, [fn_out '/GLM_cell_' num2str(goodunits(icell)) '_coupled_sim.eps'], 'eps', [6 6]);
+    
+    clf
+    sigma_fr = .01;
+    sigma_fr = sigma_fr*RefreshRate;
+    sz = sigma_fr*3*2;
+    x = linspace(-sz/2, sz/2, sz);
+    gaussFilter_fr = exp(-x.^2/(2*sigma_fr^2));
+    gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
+    
+    tstart = ceil(600*RefreshRate);
+    tend = ceil(605*RefreshRate);
+    tidx = tstart:tend;
+    truesp = proc_withheld.spiketrain(tidx,goodunits(icell));
+    pillowsimsp = Rt_glm(tidx);
+    subplot(2,1,1)
+    hold on
+    plot(tidx*proc.binsize, 500*proc.grip(tidx), 'k');
+    plot(tidx*proc.binsize, proc.cursor(tidx,1), 'b');
+    plot(tidx*proc.binsize, proc.cursor(tidx,2), 'Color', [0 0.6 0]);
+    plot(tidx*proc.binsize, proc.cursor(tidx,3), 'r');
+    legend('Grip', 'Curs x', 'Curs Y', 'Curs Z')
+    subplot(2,1,2)
+    gftruesp = conv(truesp, gaussFilter_fr, 'same');
+    gfpillowsimsp = conv(pillowsimsp, gaussFilter_fr, 'same');
+    spidx = truesp==1;
+    plot(tidx(spidx)*proc.binsize, truesp(spidx)-.95, '.', tidx*proc.binsize, gfpillowsimsp);
+    title('n rep: 20')
+    xlabel('seconds')
+    ylabel('predicted probability spiking')
+    legend('true spike train', 'Pillow''s GLM')
+    saveplot(gcf, [fn_out '/GLM_cell_' num2str(goodunits(icell)) '_coupled_sim_zoom.eps'], 'eps', [6 6]);
+end

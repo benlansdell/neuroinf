@@ -17,10 +17,11 @@ binsize = 1/RefreshRate;
 nRep = 20;                      %no. sim repetitions
 [proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames);    
 nB = size(proc.stim, 1);
-fn_out = './results_gauss_move_5hz/';
+fn_out = './results_gauss_move_5hz_20maxit/';
 trim = 1;
 pca = 0;
 Dt = 20;
+maxit = 20;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -44,7 +45,7 @@ for icell = 1:nU
     gg0.tsp = resp';
     gg0.tspi = 1;
 
-    opts = {'display', 'iter', 'maxiter', 100};
+    opts = {'display', 'iter', 'maxiter', maxit};
     [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca);
     ggs{icell} = gg;
 

@@ -45,11 +45,12 @@ end
 Vstm = Vstm + repmat(glmprs.dc(:)',slen+2,1);
 
 % -------------- Compute interpolated h current ----------------------
-if isfield(glmprs,'ihbas');  % Check if h-kernel parametrized by a basis
-    if isempty(glmprs.ih), ih = [];
-    else, ih = glmprs.ihbas*glmprs.ih;
-    end
-else, ih = glmprs.ih;
+%if isfield(glmprs,'ihbas');  % Check if h-kernel parametrized by a basis
+%    if isempty(glmprs.ih), ih = [];
+%    else, ih = glmprs.ihbas*glmprs.ih;
+%    end
+%else, 
+ih = glmprs.ih;
 end
 if ~isempty(ih)
     ihthi = [dt:dt:max(glmprs.iht)]';  % time points for sampling

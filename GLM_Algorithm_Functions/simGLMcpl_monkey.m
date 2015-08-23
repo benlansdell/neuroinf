@@ -51,7 +51,7 @@ Vstm = Vstm + repmat(glmprs.dc(:)',slen+2,1);
 %    end
 %else, 
 ih = glmprs.ih;
-end
+%end
 if ~isempty(ih)
     ihthi = [dt:dt:max(glmprs.iht)]';  % time points for sampling
     ihhi = interp1(glmprs.iht, ih, ihthi, 'linear', 0);

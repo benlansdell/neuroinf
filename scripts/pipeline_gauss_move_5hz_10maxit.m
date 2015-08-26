@@ -22,6 +22,7 @@ trim = 1;
 pca = 0;
 Dt = 20;
 maxit = 10;
+dt_glm = 0.01;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -41,7 +42,7 @@ for icell = 1:nU
     sta = reshape(sta,nF,[]);
 
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt,Dt);
+    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt_glm,Dt);
     gg0.tsp = resp';
     gg0.tspi = 1;
 
@@ -77,6 +78,8 @@ plot_filters(ggs, proc, [fn_out '/all_units_filters.eps']);
 %Simulate models%
 %%%%%%%%%%%%%%%%%
 
+time_limit = 40;
+units_conv = zeros(nU,1);
 for icell = 1:nU
     load([fn_out '/GLM_cell_' num2str(icell) '.mat']);
     %Simulation with test stim
@@ -85,13 +88,16 @@ for icell = 1:nU
     stim = stim/p;
     Tt = size(proc_withheld.stim,1);
     Rt_glm = zeros(1,Tt);
+    nconverged = 0;
     for ir = 1:nRep
         ir
-        [iR_glm,vmem,Ispk] = simGLM_monkey(gg, stim);
+        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, stim, time_limit);
         Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+        nconverged = nconverged + conv;
     end
+    units_conv(icell) = nconverged;
     Rt_glm = Rt_glm'/nRep + 1e-8;
-    save([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm');
+    save([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm', 'nconverged');
 end
 
 

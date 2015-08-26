@@ -1,4 +1,4 @@
-function [tsp,Vmem,Ispk] = simGLM(glmprs,Stim, time_limit);
+function [tsp,Vmem,Ispk,conv] = simGLM(glmprs,Stim, time_limit);
 % [tsp, Vmem,Ispk] = simGLM(glmprs,Stim);
 % 
 % Compute response of glm to stimulus Stim.
@@ -13,27 +13,27 @@ if (nargin < 3) time_limit = 20; end
 
 if size(glmprs.k,3) > 1  % Run "coupled" GLM model if multiple cells present
     if nargout <= 2
-        [tsp,Vmem] = simGLMcpl_monkey(glmprs,Stim, time_limit);
+        [tsp,Vmem,a, conv] = simGLMcpl_monkey(glmprs,Stim, time_limit);
     else
-        [tsp,Vmem,Ispk] = simGLMcpl_monkey(glmprs,Stim, time_limit);
+        [tsp,Vmem,Ispk, conv] = simGLMcpl_monkey(glmprs,Stim, time_limit);
     end
 else
     if nargout <= 2
-        [tsp,Vmem] = simGLMsingle(glmprs,Stim, time_limit);
+        [tsp,Vmem, a, conv] = simGLMsingle(glmprs,Stim, time_limit);
     else
-        [tsp,Vmem,Ispk] = simGLMsingle(glmprs,Stim, time_limit);
+        [tsp,Vmem,Ispk, conv] = simGLMsingle(glmprs,Stim, time_limit);
     end
 end
     
 % ======================================================
-function [tsp,Vmem,Ispk] = simGLMsingle(glmprs,Stim, time_limit);
+function [tsp,Vmem,Ispk, conv] = simGLMsingle(glmprs,Stim, time_limit);
 % Sub-function for simGLM.m
 % Simulates the GLM point process model for a single (uncoupled) neuron
 % using time-rescaling
     
 % --------------- Check Inputs ----------------------------------
 global RefreshRate;
-
+conv = 1;
 nbinsPerEval = 100;  % Default number of bins to update for each spike
 dt = glmprs.dt;
 % Check that dt evenly divides 1
@@ -86,6 +86,7 @@ nsp = 0; % number of spikes
 tspnext = exprnd(1);  % time of next spike (in rescaled time)
 rprev = 0;  % Integrated rescaled time up to current point
 t0=clock;
+prevspbins = zeros(100,1);
 while jbin <= rlen
     iinxt = jbin:min(jbin+nbinsPerEval-1,rlen);
     rrnxt = nlfun(Vmem(iinxt))*dt/RefreshRate; % Cond Intensity
@@ -95,6 +96,7 @@ while jbin <= rlen
         rprev = rrcum(end);
     else   % Spike!
         ispk = iinxt(min(find(rrcum>=tspnext))); % time bin where spike occurred
+        prevspbins = [ispk; prevspbins(1:end-1)];
         nsp = nsp+1;
         tsp(nsp,1) = ispk*dt; % spike time
         mxi = min(rlen, ispk+hlen); % max time affected by post-spike kernel
@@ -114,6 +116,12 @@ while jbin <= rlen
     end
     if etime(clock,t0) > time_limit
         disp('Ran out of time, bud.');
+        conv = 0;
+        break;
+    end
+    if all(diff(prevspbins)==-1)
+        disp('100 spiking bins in a row, suspect unstable GLM parameters, skipping')
+        conv = 0;
         break;
     end
 end

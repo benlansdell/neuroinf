@@ -70,6 +70,13 @@ if absref >= dt
     ihbasis(ii,:) = 0;
     ihbasis = [ih0,ihbasis];
 end
+
+% Concatenate identity-vectors
+%nkt0 = size(kt0,1);
+%kbasis = [[eye(neye); zeros(nkt0,neye)] [zeros(neye, ncos); kbasis0]];
+%kbasis = flipud(kbasis);  % flip so fine timescales are at the end.
+%nkt0 = size(kbasis,1);
+%
 ihbas = orth(ihbasis);  % use orthogonalized basis
 
 if nargin > 2

@@ -10,17 +10,17 @@ dt = ds*RefreshRate;            %Time scale spike times are resovled at,
 datafile = './mabel_reaching_5-4-10.mat';
 nU = 45;                        %no. units
 nS = 4;                         %no. stim components
-frames = 200;                   %no. stim frames 
+frames = 1;                     %no. stim frames 
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
 nRep = 20;                      %no. sim repetitions
 [proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames);    
 nB = size(proc.stim, 1);
-fn_out = './results_gauss_move_5hz/';
+fn_out = './results_std_1frame_move/';
 trim = 1;
 pca = 0;
-Dt = 20;
+dt_glm = 0.01;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -40,26 +40,29 @@ for icell = 1:nU
     sta = reshape(sta,nF,[]);
 
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt,Dt);
+    gg0 = makeFittingStruct_GLM_monkey(sta,dt_glm);
     gg0.tsp = resp';
     gg0.tspi = 1;
 
-    opts = {'display', 'iter', 'maxiter', 100};
+    opts = {'display', 'iter', 'maxiter', 10};
     [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca);
     ggs{icell} = gg;
+    gg.ih(end-1) = 100;
+    %After fitting, put abs refractory period down lower...
 
     %Simulation with test stim
-    %disp(num2str(icell));
-    %stim = proc_withheld.stim;
-    %stim = stim/p;
-    %Tt = size(proc_withheld.stim,1);
-    %Rt_glm = zeros(1,Tt);
-    %for ir = 1:nRep
-    %    ir
-    %    [iR_glm,vmem,Ispk] = simGLM_monkey(ggs{icell}, stim);
-    %    Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
-    %end
-    %Rt_glm = Rt_glm'/nRep + 1e-8;
+    disp(num2str(icell));
+    Tt = size(proc_withheld.stim,1);
+    Rt_glm = zeros(1,Tt);
+    nconverged = 0;
+    for ir = 1:nRep
+        ir
+        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, proc_withheld.stim/p, time_limit);
+        Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+        nconverged = nconverged + conv;
+    end
+    units_conv(icell) = nconverged;
+    Rt_glm = Rt_glm'/nRep + 1e-8;
     save([fn_out '/GLM_cell_' num2str(icell) '.mat'],...
         'gg'); %, 'Rt_glm');
 end
@@ -76,6 +79,8 @@ plot_filters(ggs, proc, [fn_out '/all_units_filters.eps']);
 %Simulate models%
 %%%%%%%%%%%%%%%%%
 
+time_limit = 40;
+units_conv = zeros(nU,1);
 for icell = 1:nU
     load([fn_out '/GLM_cell_' num2str(icell) '.mat']);
     %Simulation with test stim
@@ -84,13 +89,16 @@ for icell = 1:nU
     stim = stim/p;
     Tt = size(proc_withheld.stim,1);
     Rt_glm = zeros(1,Tt);
+    nconverged = 0;
     for ir = 1:nRep
         ir
-        [iR_glm,vmem,Ispk] = simGLM_monkey(gg, stim);
+        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, stim, time_limit);
         Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+        nconverged = nconverged + conv;
     end
+    units_conv(icell) = nconverged;
     Rt_glm = Rt_glm'/nRep + 1e-8;
-    save([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm');
+    save([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm', 'nconverged');
 end
 
 
@@ -180,6 +188,7 @@ ggs_cpl = {};
 maxiter = 10;
 %For reals
 maxiter = 30;
+dt_glm = 0.01;
 for icell = 1:nU
     disp(num2str(icell));
     stim = proc.stim;
@@ -200,7 +209,7 @@ for icell = 1:nU
     sta = reshape(sta,nF,[]);
 
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt,Dt);
+    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt_glm,Dt);
     gg0.tsp = resp';
     gg0.tspi = 1;
 

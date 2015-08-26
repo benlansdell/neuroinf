@@ -1,4 +1,4 @@
-function [processed, processed_withheld] = preprocess(datafile, binsize, dt, frames)
+function [processed, processed_withheld] = preprocess(datafile, binsize, dt, frames, std)
 	%Preprocess both spike data and stim data
 	%
 	%Usage:
@@ -32,6 +32,7 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
 	%	processed = preprocess_monkey_pillow(datafile, binsize, dt, frames);
 
 	%Event legend
+	if (nargin < 5) std = 0; end
 	TRIALEND = 15;
 	TARGETAPPEARED = 110;
 	TARGETREACHED = 111;
@@ -43,9 +44,11 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
     processed.grip = Grip_force;
     processed.stim = [processed.cursor, processed.grip];
     %Normalize
-    %for idx = 1:size(processed.stim,2)
-    %	processed.stim(:,idx) = (processed.stim(:,idx)-mean(processed.stim(:,idx)))/std(processed.stim(:,idx));
-    %end
+    if std == 1
+    	for idx = 1:size(processed.stim,2)
+	    	processed.stim(:,idx) = (processed.stim(:,idx)-mean(processed.stim(:,idx)))/std(processed.stim(:,idx));
+    	end
+	end
     processed.stim = resample(processed.stim, 1000*ds, 1000*binsize);
     processed.dt = dt;
     unitnames = who('CSPIK*');

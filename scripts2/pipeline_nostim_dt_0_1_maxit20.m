@@ -10,17 +10,19 @@ dt = ds*RefreshRate;            %Time scale spike times are resovled at,
 datafile = './mabel_reaching_5-4-10.mat';
 nU = 45;                        %no. units
 nS = 4;                         %no. stim components
-frames = 200;                   %no. stim frames 
+frames = 0;                   %no. stim frames 
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
 nRep = 20;                      %no. sim repetitions
 [proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames);    
 nB = size(proc.stim, 1);
-fn_out = './results_gauss_move_5hz/';
+fn_out = './results2_gauss_move_5hz_maxit20_5frame/';
 trim = 1;
 pca = 0;
 Dt = 20;
+maxit = 20;
+dt_glm = 0.01;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -40,11 +42,11 @@ for icell = 1:nU
     sta = reshape(sta,nF,[]);
 
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt,Dt);
+    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec(sta,dt_glm,Dt);
     gg0.tsp = resp';
     gg0.tspi = 1;
 
-    opts = {'display', 'iter', 'maxiter', 100};
+    opts = {'display', 'iter', 'maxiter', maxit};
     [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca);
     ggs{icell} = gg;
 
@@ -116,10 +118,10 @@ for icell = 1:nU
     pillowsimsp = Rt_glm(tidx);
     subplot(2,1,1)
     hold on
-    plot(tidx*proc.binsize, 500*proc_withheld.grip(tidx), 'k');
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,1), 'b');
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,2), 'Color', [0 0.6 0]);
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,3), 'r');
+    plot(tidx*proc.binsize, 500*proc.grip(tidx), 'k');
+    plot(tidx*proc.binsize, proc.cursor(tidx,1), 'b');
+    plot(tidx*proc.binsize, proc.cursor(tidx,2), 'Color', [0 0.6 0]);
+    plot(tidx*proc.binsize, proc.cursor(tidx,3), 'r');
     legend('Grip', 'Curs x', 'Curs Y', 'Curs Z')
     subplot(2,1,2)
     gftruesp = conv(truesp, gaussFilter_fr, 'same');
@@ -146,10 +148,10 @@ for icell = 1:nU
     pillowsimsp = Rt_glm(tidx);
     subplot(2,1,1)
     hold on
-    plot(tidx*proc.binsize, 500*proc_withheld.grip(tidx), 'k');
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,1), 'b');
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,2), 'Color', [0 0.6 0]);
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,3), 'r');
+    plot(tidx*proc.binsize, 500*proc.grip(tidx), 'k');
+    plot(tidx*proc.binsize, proc.cursor(tidx,1), 'b');
+    plot(tidx*proc.binsize, proc.cursor(tidx,2), 'Color', [0 0.6 0]);
+    plot(tidx*proc.binsize, proc.cursor(tidx,3), 'r');
     legend('Grip', 'Curs x', 'Curs Y', 'Curs Z')
     subplot(2,1,2)
     gftruesp = conv(truesp, gaussFilter_fr, 'same');
@@ -179,7 +181,7 @@ ggs_cpl = {};
 %For testing
 maxiter = 10;
 %For reals
-maxiter = 30;
+maxiter = 100;
 for icell = 1:nU
     disp(num2str(icell));
     stim = proc.stim;
@@ -208,7 +210,6 @@ for icell = 1:nU
     gg0.tsp2 = coupled;
     %Add terms for other spike filters
     gg0.ih = zeros(size(gg0.ih,1),nU);
-    gg0.ihbas2 = gg0.ihbas;
 
     opts = {'display', 'iter', 'maxiter', maxiter};
     [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca);
@@ -236,104 +237,24 @@ save([fn_out '/all_units_network.mat'], 'ggs_cpl');
 %Plot
 plot_filters_network(ggs_cpl, proc, [fn_out '/all_units_network_filters.eps']);
 
+
 load([fn_out '/all_units_network.mat'])
-time_limit = 30;
 nU = length(ggs_cpl);
 %Simulate network model...
 stim = proc_withheld.stim;
 stim = stim/p;
 clear proc;
 clear proc_withheld;
-%Make sim struct
-glm_cpl = makeSimStruct_GLMcpl(ggs_cpl{:});
-%Simulation with test stim
-Tt = size(stim,1);
-Rt_glm = {};
-for idx = 1:nU
-    Rt_glm{idx} = zeros(Tt,1);
-end
-
-for ir = 1:nRep
-    ir
-    for idx = 1:nU
-        Rt_glm{idx}(ceil(iR_glm{idx})) = Rt_glm{idx}(ceil(iR_glm{idx}))+1;
-    end
-end
-for idx = 1:nU
-    Rt_glm{idx} = Rt_glm{idx}'/nRep + 1e-8;
-end
-save([fn_out '/GLM_coupled_simulation_all.mat'], 'Rt_glm');
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%4 Plot coupled simulations%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-load([fn_out '/all_units_network.mat'])
-load([fn_out '/GLM_coupled_simulation_all.mat'])
-goodunits = [3 4 6 7 8 9 14 15 16 17 18 19 21 23 27 31 33 34 35 36 37 39 40 41];
-nU = length(goodunits);
-%Remove the 'bad' units from the dataset
-[proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames);    
-[proc, proc_withheld] = remove_bad_units(goodunits, proc, proc_withheld);
-
 for icell = 1:nU
-    clf
-    sigma_fr = .25;
-    sigma_fr = sigma_fr*RefreshRate;
-    sz = sigma_fr*3*2;
-    x = linspace(-sz/2, sz/2, sz);
-    gaussFilter_fr = exp(-x.^2/(2*sigma_fr^2));
-    gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
-    tstart = ceil(600*RefreshRate);
-    tend = ceil(750*RefreshRate);
-    tidx = tstart:tend;
-    truesp = proc_withheld.spiketrain(tidx,icell);
-    pillowsimsp = Rt_glm{icell}(tidx);
-    subplot(2,1,1)
-    hold on
-    plot(tidx*proc.binsize, 500*proc_withheld.grip(tidx), 'k');
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,1), 'b');
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,2), 'Color', [0 0.6 0]);
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,3), 'r');
-    legend('Grip', 'Curs x', 'Curs Y', 'Curs Z')
-    subplot(2,1,2)
-    gftruesp = conv(truesp, gaussFilter_fr, 'same');
-    gfpillowsimsp = conv(pillowsimsp, gaussFilter_fr, 'same');
-    plot(tidx*proc.binsize, gftruesp, tidx*proc.binsize, gfpillowsimsp);
-    title('n rep: 20')
-    xlabel('seconds')
-    ylabel('predicted probability spiking')
-    legend('true spike train', 'Pillow''s GLM')
-    saveplot(gcf, [fn_out '/GLM_coupled_' num2str(goodunits(icell)) '_sim.eps'], 'eps', [6 6]);
-    
-    clf
-    sigma_fr = .01;
-    sigma_fr = sigma_fr*RefreshRate;
-    sz = sigma_fr*3*2;
-    x = linspace(-sz/2, sz/2, sz);
-    gaussFilter_fr = exp(-x.^2/(2*sigma_fr^2));
-    gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
-    
-    tstart = ceil(600*RefreshRate);
-    tend = ceil(605*RefreshRate);
-    tidx = tstart:tend;
-    truesp = proc_withheld.spiketrain(tidx,icell);
-    pillowsimsp = Rt_glm{icell}(tidx);
-    subplot(2,1,1)
-    hold on
-    plot(tidx*proc.binsize, 500*proc_withheld.grip(tidx), 'k');
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,1), 'b');
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,2), 'Color', [0 0.6 0]);
-    plot(tidx*proc.binsize, proc_withheld.cursor(tidx,3), 'r');
-    legend('Grip', 'Curs x', 'Curs Y', 'Curs Z')
-    subplot(2,1,2)
-    gftruesp = conv(truesp, gaussFilter_fr, 'same');
-    gfpillowsimsp = conv(pillowsimsp, gaussFilter_fr, 'same');
-    spidx = truesp==1;
-    plot(tidx(spidx)*proc.binsize, truesp(spidx)-.95, '.', tidx*proc.binsize, gfpillowsimsp);
-    title('n rep: 20')
-    xlabel('seconds')
-    ylabel('predicted probability spiking')
-    legend('true spike train', 'Pillow''s GLM')
-    saveplot(gcf, [fn_out '/GLM_coupled_' num2str(goodunits(icell)) '_sim_zoom.eps'], 'eps', [6 6]);
+    %Simulation with test stim
+    disp(num2str(icell));
+    Tt = size(stim,1);
+    Rt_glm = zeros(1,Tt);
+    for ir = 1:nRep
+        ir
+        [iR_glm,vmem,Ispk] = simGLM_monkey(ggs_cpl{icell}, stim);
+        Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+    end
+    Rt_glm = Rt_glm'/nRep + 1e-8;
+    save([fn_out '/GLM_coupled_simulation_' num2str(icell) '.mat'], 'Rt_glm');
 end

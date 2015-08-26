@@ -20,7 +20,7 @@ nB = size(proc.stim, 1);
 fn_out = './results_std_1frame_move/';
 trim = 1;
 pca = 0;
-dt_glm = 0.01;
+dt_glm = 0.1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%

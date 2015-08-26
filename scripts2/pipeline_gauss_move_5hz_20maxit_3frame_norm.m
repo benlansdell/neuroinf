@@ -19,6 +19,7 @@ std = 1;
 [proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames, std);    
 nB = size(proc.stim, 1);
 fn_out = './results2_gauss_move_5hz_maxit20_3frame_norm/';
+mkdir(fn_out);
 trim = 1;
 pca = 0;
 Dt = 20;

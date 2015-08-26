@@ -23,6 +23,7 @@ pca = 0;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.01;
+mkdir(fn_out);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%

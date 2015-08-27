@@ -18,7 +18,7 @@ nRep = 20;                      %no. sim repetitions
 std = 0;
 [proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames, std);    
 nB = size(proc.stim, 1);
-fn_out = './results2_gauss_move_5hz_maxit20_3frame_std/';
+fn_out = './results2_gauss_move_5hz_maxit20_3frame/';
 trim = 1;
 pca = 0;
 Dt = 20;
@@ -85,14 +85,12 @@ for icell = 1:nU
     load([fn_out '/GLM_cell_' num2str(icell) '.mat']);
     %Simulation with test stim
     disp(num2str(icell));
-    stim = proc_withheld.stim;
-    stim = stim/p;
     Tt = size(proc_withheld.stim,1);
     Rt_glm = zeros(1,Tt);
     nconverged = 0;
     for ir = 1:nRep
         ir
-        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, stim, time_limit);
+        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, proc_withheld.stim/p, time_limit);
         Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
         nconverged = nconverged + conv;
     end
@@ -101,6 +99,30 @@ for icell = 1:nU
     save([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm', 'nconverged');
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Simulate models on training data%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+time_limit = 60;
+units_conv = zeros(nU,1);
+for icell = 1:nU
+    load([fn_out '/GLM_cell_' num2str(icell) '.mat']);
+    %Simulation with test stim
+    disp(num2str(icell));
+    Tt = size(proc_withheld.stim,1);
+    Rt_glm = zeros(1,Tt);
+    nconverged = 0;
+    for ir = 1:nRep
+        ir
+        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, proc.stim/p, time_limit);
+        Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+        nconverged = nconverged + conv;
+    end
+    units_conv(icell) = nconverged;
+    Rt_glm = Rt_glm'/nRep + 1e-8;
+    save([fn_out '/GLM_cell_simulation_training_' num2str(icell) '.mat'], 'Rt_glm', 'nconverged');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %4 Plot uncoupled simulations%

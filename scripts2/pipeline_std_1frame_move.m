@@ -21,7 +21,7 @@ fn_out = './results2_std_1frame_move/';
 mkdir(fn_out);
 trim = 1;
 pca = 0;
-dt_glm = 0.1;
+dt_glm = 0.01;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -52,18 +52,18 @@ for icell = 1:nU
     %After fitting, put abs refractory period down lower...
 
     %Simulation with test stim
-    disp(num2str(icell));
-    Tt = size(proc_withheld.stim,1);
-    Rt_glm = zeros(1,Tt);
-    nconverged = 0;
-    for ir = 1:nRep
-        ir
-        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, proc_withheld.stim/p, time_limit);
-        Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
-        nconverged = nconverged + conv;
-    end
-    units_conv(icell) = nconverged;
-    Rt_glm = Rt_glm'/nRep + 1e-8;
+    %disp(num2str(icell));
+    %Tt = size(proc_withheld.stim,1);
+    %Rt_glm = zeros(1,Tt);
+    %nconverged = 0;
+    %for ir = 1:nRep
+    %    ir
+    %    [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, proc_withheld.stim/p, time_limit);
+    %    Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+    %    nconverged = nconverged + conv;
+    %end
+    %units_conv(icell) = nconverged;
+    %Rt_glm = Rt_glm'/nRep + 1e-8;
     save([fn_out '/GLM_cell_' num2str(icell) '.mat'],...
         'gg'); %, 'Rt_glm');
 end

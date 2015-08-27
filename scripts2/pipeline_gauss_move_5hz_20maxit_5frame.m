@@ -84,14 +84,12 @@ for icell = 1:nU
     load([fn_out '/GLM_cell_' num2str(icell) '.mat']);
     %Simulation with test stim
     disp(num2str(icell));
-    stim = proc_withheld.stim;
-    stim = stim/p;
     Tt = size(proc_withheld.stim,1);
     Rt_glm = zeros(1,Tt);
     nconverged = 0;
     for ir = 1:nRep
         ir
-        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, stim, time_limit);
+        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, proc_withheld.stim/p, time_limit);
         Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
         nconverged = nconverged + conv;
     end

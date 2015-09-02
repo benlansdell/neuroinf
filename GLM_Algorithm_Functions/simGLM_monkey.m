@@ -1,4 +1,4 @@
-function [tsp,Vmem,Ispk,conv] = simGLM(glmprs,Stim, time_limit);
+function [tsp,Vmem,Ispk,conv] = simGLM(glmprs,Stim, time_limit, offset);
 % [tsp, Vmem,Ispk] = simGLM(glmprs,Stim);
 % 
 % Compute response of glm to stimulus Stim.
@@ -10,23 +10,24 @@ function [tsp,Vmem,Ispk,conv] = simGLM(glmprs,Stim, time_limit);
 % nonlinearity to obtain the point-process conditional intensity.  Add a
 % post-spike current to the linear input after every spike.
 if (nargin < 3) time_limit = 20; end
+if (nargin < 4) offset = 1; end
 
 if size(glmprs.k,3) > 1  % Run "coupled" GLM model if multiple cells present
     if nargout <= 2
-        [tsp,Vmem,a, conv] = simGLMcpl_monkey(glmprs,Stim, time_limit);
+        [tsp,Vmem,a, conv] = simGLMcpl_monkey(glmprs,Stim, time_limit, offset);
     else
-        [tsp,Vmem,Ispk, conv] = simGLMcpl_monkey(glmprs,Stim, time_limit);
+        [tsp,Vmem,Ispk, conv] = simGLMcpl_monkey(glmprs,Stim, time_limit, offset);
     end
 else
     if nargout <= 2
-        [tsp,Vmem, a, conv] = simGLMsingle(glmprs,Stim, time_limit);
+        [tsp,Vmem, a, conv] = simGLMsingle(glmprs,Stim, time_limit, offset);
     else
-        [tsp,Vmem,Ispk, conv] = simGLMsingle(glmprs,Stim, time_limit);
+        [tsp,Vmem,Ispk, conv] = simGLMsingle(glmprs,Stim, time_limit, offset);
     end
 end
     
 % ======================================================
-function [tsp,Vmem,Ispk, conv] = simGLMsingle(glmprs,Stim, time_limit);
+function [tsp,Vmem,Ispk, conv] = simGLMsingle(glmprs,Stim, time_limit, offset);
 % Sub-function for simGLM.m
 % Simulates the GLM point process model for a single (uncoupled) neuron
 % using time-rescaling
@@ -50,7 +51,12 @@ rlen = round(slen/dt);  % length of binned response
 % -------------  Compute filtered resp to signal ----------------
 k = glmprs.k;  % stim filter
 if swid == size(k,2) % convolve if k is the same width as stimulus
-    Vstm = sameconv_monkey(Stim,k); 
+    %Convolve components individually and add them at the end...
+    Vstm = zeros(size(Stim,1),1);
+    for idx = 1:swid
+        v = sameconv_monkey(Stim(:,idx),k(:,idx), offset);
+        Vstm = Vstm + v; 
+    end
 else 
     error('Mismatch between stimulus and filter size -- glmrunmod');
 end
@@ -86,7 +92,7 @@ nsp = 0; % number of spikes
 tspnext = exprnd(1);  % time of next spike (in rescaled time)
 rprev = 0;  % Integrated rescaled time up to current point
 t0=clock;
-prevspbins = zeros(100,1);
+prevspbins = zeros(300,1);
 while jbin <= rlen
     iinxt = jbin:min(jbin+nbinsPerEval-1,rlen);
     rrnxt = nlfun(Vmem(iinxt))*dt/RefreshRate; % Cond Intensity
@@ -120,7 +126,7 @@ while jbin <= rlen
         break;
     end
     if all(diff(prevspbins)==-1)
-        disp('100 spiking bins in a row, suspect unstable GLM parameters, skipping')
+        disp('300 spiking bins in a row, suspect unstable GLM parameters, skipping')
         conv = 0;
         break;
     end

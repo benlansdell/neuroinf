@@ -1,4 +1,4 @@
-function G = sameconv(A, B);
+function G = sameconv(A, B, offset);
 	%  G = sameconv(A, B);
 	%   
 	%  Causally filters A with B, giving a column vector with same height as
@@ -12,8 +12,11 @@ function G = sameconv(A, B);
 	
 	G = ifft(sum(fft(A,nn).*fft(flipud(B),nn),2));
 	%This will make stim before stim
-	%G = G(1:am,:);
+	if offset == 0
+		G = G(1:am,:);
+	else
+		%This will make 'stim' half before, half after spikes
+		G = G(ceil(bm/2):ceil(bm/2)+am-1,:);	
+	end
 	%This will make 'stim' after spikes
 	%G = G(end-am+1:end,:);
-	%This will make 'stim' half before, half after spikes
-	G = G(ceil(bm/2):ceil(bm/2)+am-1,:);	

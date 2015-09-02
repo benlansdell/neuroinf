@@ -1,5 +1,10 @@
-load('mabel_reaching_5-4-10')
-
+datafile = 'mabel_reaching_5-4-10';
+binsize = 0.01;
+dt = .1;
+frames = 1;
+load(datafile);
+processed = preprocess(datafile, binsize, dt, frames);
+spikes = processed.spiketrain(:,19);
 %Legend:
 TRIALSTART = 10;
 TRIALEND = 15;
@@ -13,15 +18,21 @@ GRIPPRESSED = 368;
 GRIPRELEASED = 369;
 
 figure
-clf
 %Whole recording lasts 6000s...
-tstart = 525.64; tend = 575.64;
+tstart = 655.64; tend = 675.64;
 tidx = (tstart*100):(tend*100);
 tt = tidx/100;
 
 %Plot grip force
+subplot(3,1,1)
+plot(tt-tstart, Cursor_X(tidx), tt, Cursor_Y(tidx), tt, Cursor_Z(tidx));
+xlim([0, tend-tstart])
+ylabel('cursor position (cm)')
+%legend('Cursor x', 'y', 'z')
+subplot(3,1,2)
 hold on
-h(1) = plot(tt, Grip_force(tidx), '--');
+h(1) = plot(tt, Grip_force(tidx), 'k');
+xlim([tstart, tend])
 %h(1) = plot(tt, Cursor_X(tidx), '--', tt, Cursor_Y(tidx), '--', tt, Cursor_Z(tidx), '--');
 colors = colormap
 
@@ -128,9 +139,26 @@ if ingrip
 	h(12) = plot([gripstart, tend], [-0.09, -0.09], 'y', 'LineWidth', 2);
 	%line([gripstart, tend], [-0.09, -0.09], 'LineWidth', 2)
 end
-
+ylabel('grip force')
 hl = legend([h([1 3:7])], 'Grip force', 'Within trial', 'Origin seek', 'Target seek', 'Go signal', 'Grip pressed')
-saveplot(gcf, './trialsample.eps', 'eps', [6 6])
+
+subplot(3,1,3)
+%Smooth spikes
+RefreshRate = 100;
+sigma_fr = .1;
+sigma_fr = sigma_fr*RefreshRate;
+sz = sigma_fr*3*2;
+x = linspace(-sz/2, sz/2, sz);
+gaussFilter_fr = exp(-x.^2/(2*sigma_fr^2));
+gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
+gftruesp = conv(spikes, gaussFilter_fr, 'same');
+
+%Plot spikes of a 'good' unit
+plot(tt-tstart, gftruesp(tidx)*RefreshRate);
+xlim([0, tend-tstart])
+xlabel('time (s)')
+ylabel('spikes/s')
+saveplot(gcf, './trialsample.eps', 'eps', [10 6])
 
 %Plot autocorrelation too...
 %Plot a bunch of preprocessing diagnostics
@@ -145,13 +173,13 @@ autotorqueZ = xcov(Cursor_Z(:),samplerate*maxlag);%, 'coeff');
 autotorqueGrip = xcov(Grip_force(:),samplerate*maxlag);%, 'coeff');
 tt = -maxlag:binsize:maxlag;
 subplot(2,2,1)
-plot(tt, autotorqueX);
+plot(tt, autotorqueX/max(autotorqueX));
 title('Cursor X');		
 subplot(2,2,2)
-plot(tt, autotorqueY)
+plot(tt, autotorqueY/max(autotorqueX))
 title('Cursor Y');
 subplot(2,2,3)
-plot(tt, autotorqueZ);
+plot(tt, autotorqueZ/max(autotorqueX));
 title('Cursor Z')
 subplot(2,2,4)
 plot(tt, autotorqueGrip);

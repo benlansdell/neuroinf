@@ -1,4 +1,4 @@
-function setupfitting_GLM_trim(gg, Stim, maxsize, processed, trim, pcas);
+function setupfitting_GLM_trim(gg, Stim, maxsize, processed, trim, pcas, offset);
 %  setupfitting_GLM_trim(gg, Stim,maxsize);
 %
 %  Sets global variables for ML estimation of GLM model using 'maxli_GLM'
@@ -69,7 +69,7 @@ MSTM = zeros(slen,ncols);
 if pcas ~= 1
     for i = 1:nx
         for j = 1:nt
-            MSTM(:,(i-1)*nt+j) = sameconv_monkey(Stim(:,i),gg.ktbas(:,j));
+            MSTM(:,(i-1)*nt+j) = sameconv_monkey(Stim(:,i),gg.ktbas(:,j), offset);
         end
     end
 else

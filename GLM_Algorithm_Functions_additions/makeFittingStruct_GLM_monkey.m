@@ -42,17 +42,34 @@ gg.kbasprs = kbasprs;
 % ======================================================================
 % Set up basis for post-spike kernel
 
-a = 1/100;
-%a = DTsim*10;
-ihbasprs.ncols = 10;  % Number of basis vectors for post-spike kernel
-ihbasprs.hpeaks = [a RefreshRate*.1];  % Peak location for first and last vectors
+%a = 1/100;
+%%a = DTsim*10;
+%ihbasprs.ncols = 10;  % Number of basis vectors for post-spike kernel
+%ihbasprs.hpeaks = [a RefreshRate*.1];  % Peak location for first and last vectors
+%ihbasprs.b = .4;  % How nonlinear to make spacings
+%ihbasprs.absref = a; % absolute refractory period 
+%[iht,ihbas,ihbasis] = makeBasis_PostSpike(ihbasprs,DTsim);
+%gg.iht = iht;
+%gg.ihbas = ihbas;
+%gg.ihbasprs = ihbasprs;
+%gg.ih = zeros(size(ihbas,2),1);
+
+nD = 15;
+ihbasprs.ncols = 5;  % Number of basis vectors for post-spike kernel
+ihbasprs.hpeaks = [DTsim*nD 5];  % Peak location for first and last vectors
 ihbasprs.b = .4;  % How nonlinear to make spacings
-ihbasprs.absref = a; % absolute refractory period 
+ihbasprs.absref = DTsim*nD; % absolute refractory period 
 [iht,ihbas,ihbasis] = makeBasis_PostSpike(ihbasprs,DTsim);
 gg.iht = iht;
 gg.ihbas = ihbas;
 gg.ihbasprs = ihbasprs;
 gg.ih = zeros(size(ihbas,2),1);
+
+delblock = zeros(size(ihbas,1), nD);
+delblock(1:nD,1:nD) = eye(nD);
+ihbasdelta = [ihbas(:,1:end-2), delblock, ihbas(:,end)];
+gg.ihbas = ihbasdelta;
+gg.ih = zeros(size(ihbasdelta,2),1);
 
 % % ==================================================================
 % set up initial K params

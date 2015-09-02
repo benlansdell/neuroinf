@@ -1,4 +1,4 @@
-function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed, trim, pcas);
+function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed, trim, pcas, offset);
 %  [ggnew,fval,H] = MLfit_GLM(gg,Stim,optimArgs);
 % 
 %  Computes the ML estimate for GLM params, using grad and hessians.
@@ -16,6 +16,9 @@ function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed, trim, pcas);
 %Only include times within stimulus that are within trial
 
 MAXSIZE  = 1e7;  % Maximum amount to be held in memory at once;
+if nargin < 7
+	offset = 1;
+end
 
 % Set optimization parameters 
 if nargin > 2
@@ -29,7 +32,7 @@ if nargin < 6
 end
 
 % Set initial params
-prs0 = extractFitPrs_GLM_trim(gg,Stim,MAXSIZE,processed, trim, pcas);
+prs0 = extractFitPrs_GLM_trim(gg,Stim,MAXSIZE,processed, trim, pcas, offset);
 
 % minimize negative log likelihood
 [prs,fval] = fminunc(@Loss_GLM_logli,prs0,opts);

@@ -1,4 +1,4 @@
-function gg = makeFittingStruct_GLM_monkey_gauss_basisvec_refract(sta,DTsim,Dt,glmstruct,cellnumToFit);
+function gg = makeFittingStruct_GLM(sta,DTsim,glmstruct,cellnumToFit);
 % gg = makeFittingStruct_GLM(sta,DTsim,glmstruct,cellnumToFit);
 %
 % Initialize parameter structure for fitting of GLM model,
@@ -7,6 +7,8 @@ function gg = makeFittingStruct_GLM_monkey_gauss_basisvec_refract(sta,DTsim,Dt,g
 % Inputs:  sta = initial guess at kernel (or use all zeros if unknown)
 
 % Set up structure
+global RefreshRate;
+
 gg.k = [];
 gg.dc = 0;
 gg.ih = [];
@@ -26,48 +28,30 @@ gg.ihbasprs2 = [];
 gg.tsp2 = [];
 gg.couplednums = [];
 
+% === Make temporal basis for stimulus filter =======================
 [nkt,nkx] = size(sta);
 % % ----- Set up temporal basis for stimulus kernel -----------
-%Dt = 10;
-center = (nkt-1)/2+1;
-indices = [fliplr(center:-Dt:2*Dt), (center+Dt):Dt:(nkt-2*Dt)];
-nk = length(indices);
-gg.ktbas = zeros(nkt, nk);
-
-sigma_fr = Dt;
-sz = sigma_fr*3*2;
-x = linspace(-sz/2, sz/2, sz);
-gaussFilter_fr = exp(-x.^2/(2*sigma_fr^2));
-gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
-for idx = 1:nk
-    gg.ktbas(indices(idx), idx) = 1;
-    gg.ktbas(:,idx) = conv(gg.ktbas(:,idx), gaussFilter_fr, 'same');
-end
+kbasprs.neye = size(sta,1); % Number of "identity" basis vectors near time of spike;
+kbasprs.ncos = 0; % Number of raised-cosine vectors to use  
+kbasprs.kpeaks = [0 round(nkt/3)];  % Position of first and last bump (relative to identity bumps)
+kbasprs.b = 3; % Offset for nonlinear scaling (larger -> more linear)
+ktbas = makeBasis_StimKernel(kbasprs,nkt);
+gg.ktbas = ktbas;
+gg.kbasprs = kbasprs;
 
 % ======================================================================
 % Set up basis for post-spike kernel
 
-nD = 15;
 ihbasprs.ncols = 5;  % Number of basis vectors for post-spike kernel
-ihbasprs.hpeaks = [1 5]; %DTsim*nD 5];  % Peak location for first and last vectors
-ihbasprs.b = .4;  % How nonlinear to make spacings
-ihbasprs.absref = 1; %DTsim*nD; % absolute refractory period 
+ihbasprs.hpeaks = [DTsim*10 2];  % Peak location for first and last vectors
+ihbasprs.b = .4;  % How nonlinear to make spacings (Default)
+%ihbasprs.b = .2;  % How nonlinear to make spacings
+ihbasprs.absref = DTsim*10; % absolute refractory period 
 [iht,ihbas,ihbasis] = makeBasis_PostSpike(ihbasprs,DTsim);
 gg.iht = iht;
 gg.ihbas = ihbas;
 gg.ihbasprs = ihbasprs;
 gg.ih = zeros(size(ihbas,2),1);
-
-%All identity functions
-gg.ihbas = eye(size(gg.iht,1));
-gg.ihbas = gg.ihbas(:, 2:end-1);
-gg.ih = zeros(size(gg.ihbas,2),1);
-
-%delblock = zeros(size(ihbas,1), nD);
-%delblock(1:nD,1:nD) = eye(nD);
-%ihbasdelta = [ihbas(:,1:end-2), delblock, ihbas(:,end)];
-%gg.ihbas = ihbasdelta;
-%gg.ih = zeros(size(ihbasdelta,2),1);
 
 % % ==================================================================
 % set up initial K params
@@ -76,15 +60,17 @@ gg.k = gg.ktbas*gg.kt;
 
 % % ==================================================================
 % If full param struct passed in, match other params as well
-if (nargin >= 4) 
+if (nargin >= 3) 
     gg.dc = glmstruct.dc;
     gg.ih = glmstruct.ih;
     gg.iht = glmstruct.iht;
+
     %---Extract correct ih basis params, if present----
     if isfield(glmstruct, 'ihbasprs')
         if ~isempty(glmstruct.ihbasprs);
             ihbasprs = glmstruct.ihbasprs;
             [iht,ihbas] = makeBasis_PostSpike(ihbasprs,DTsim);
+
             % -- Do some error-checking ----
             if length(iht) ~= length(glmstruct.iht)
                 error('mismatch between iht and h-kernel params ihbasprs');
@@ -92,11 +78,12 @@ if (nargin >= 4)
             if size(glmstruct.ih,2)>1 & (nargin < 4)
                 error('multi-cell glm struct passed in without cell # to fit');
             end
+
             %--- Put glmstruct params into gg ----
             gg.iht = glmstruct.iht;
             gg.ihbas = ihbas;
             gg.ihbasprs = ihbasprs;
-            if nargin == 4  % single-cell only
+            if nargin == 3  % single-cell only
                 gg.ih = inv(ihbas'*ihbas)*ihbas'*glmstruct.ih;
                 gg.dc = glmstruct.dc;
             else % mulitcell-cell
@@ -107,7 +94,10 @@ if (nargin >= 4)
                 gg.ih = inv(ihbas'*ihbas)*ihbas'*[ih1 ih2];
                 gg.dc = glmstruct.dc(cellnumToFit);
             end
+
         end
     end
+
+
 end
 

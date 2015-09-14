@@ -1,13 +1,14 @@
-function plot_filters_monkeypillow(models, processed, fn_out)
+function plot_filters_monkeypillow(models, processed, fn_out, units)
 	%Plot filters of a fitted GLM model, along with other fit statistics
 	%     
 	%Input:
 	%	models = data structure output by function in ./fitting (containing fitted coefficients)
 	%	fn_out = base filename to write plots to for each unit
+	if (nargin < 4)	units = 1:length(models); end
 
 	global RefreshRate;
 	nU = 1; %number of units
-	nM = length(models);
+	nM = length(units);
 	names = {'spike history', 'curs x', 'curs y', 'curs z', 'grip'};
 	nK = length(names);
 	nF = 2*(processed.frames)+1;
@@ -25,6 +26,7 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 	spacey=0.4;
 	fontsize=5;    
 	sub_pos=subplot_pos(plotwidth,plotheight,leftedge,rightedge,bottomedge,topedge,subplotsx,subplotsy,spacex,spacey);
+	sub_pos = fliplr(sub_pos);
 
 	%setting the Matlab figure
 	f=figure;
@@ -39,7 +41,8 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 	ymaxcurs = 0;
 	ymingrip = 0;
 	ymaxgrip = 0;
-	for i = 1:nM
+	for idx = 1:nM
+		i = units(idx);
 		model = models{i};
 		idx = 1;
 		stimfilt = model.k;
@@ -52,9 +55,10 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 		ymaxgrip = max(ymaxgrip, max(grip));
 	end
 
-	for i = 1:nM
+	for idx = 1:nM
+		i = units(idx);
 		model = models{i};
-		idx = 1;
+		%idx = 1;
 		stimfilt = model.k;
 		stimfilt = reshape(stimfilt, nF, []);
 		const = model.dc;
@@ -76,11 +80,15 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 				ymax = ymaxgrip*1.2;
 				filt = stimfilt(:,j-1);
 			end
-			dt_filt = model.dt*RefreshRate;
-			ax=axes('position',sub_pos{j,i},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
+			dt_sp = model.dt*RefreshRate;
+			dt_filt = RefreshRate*.1;
+			ax=axes('position',sub_pos{j,idx},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
 			tt = (0:length(filt)-1)*dt_filt;
 			if j == 1
-				tt = (tt-max(tt))/RefreshRate/model.dt;
+				tt = model.iht;
+				tt = (tt-max(tt))*dt_filt;
+			else
+				tt = (tt-max(tt)/2);
 			end
 			plot(tt, filt);
 			ylim([ymin ymax])
@@ -101,13 +109,14 @@ function plot_filters_monkeypillow(models, processed, fn_out)
 		end
 		%Plot information about each subplot
 		%subplot(nP, nK+1, (nK+1))
-		ax=axes('position',sub_pos{nK+1,i},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
-		str1(1) = {['Unit: ' name]};
+		ax=axes('position',sub_pos{nK+1,idx},'XGrid','off','XMinorGrid','off','FontSize',fontsize,'Box','on','Layer','top');
+		str1(1) = {['Unit no.: ' num2str(i) ', init: ' name]};
 		%str1(2) = {['Deviance: ' num2str(dev)]};
 		%str1(3) = {['Degrees of freedom: ' num2str(stats.dfe)]};
 		str1(2) = {['Binsize: ' num2str(processed.binsize)]};
 		str1(3) = {['Seconds of training: ' num2str(size(processed.cursor,1)*processed.binsize)]};
 		str1(4) = {['Number of spikes: ' num2str(sum(processed.spiketrain(:,i)))]};
+		str1(5) = {['Constant term: ' num2str(model.dc)]};
 		text(0.1,0.8,str1, 'FontSize', 5, 'Interpreter', 'none')
 		axis off
 	end

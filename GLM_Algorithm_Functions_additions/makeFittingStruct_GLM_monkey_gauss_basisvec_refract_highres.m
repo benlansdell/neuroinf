@@ -47,10 +47,10 @@ end
 % ======================================================================
 % Set up basis for post-spike kernel
 
-ihbasprs.ncols = 5;  % Number of basis vectors for post-spike kernel
-ihbasprs.hpeaks = [.5 7];  % Peak location for first and last vectors
-ihbasprs.b = .4;  % How nonlinear to make spacings
-ihbasprs.absref = .5; % absolute refractory period (5ms)
+ihbasprs.ncols = 8;        % Number of basis vectors for post-spike kernel
+ihbasprs.hpeaks = [.5 5];  % Peak location for first and last vectors
+ihbasprs.b = .4;           % How nonlinear to make spacings
+ihbasprs.absref = .5;      % absolute refractory period (5ms)
 [iht,ihbas,ihbasis] = makeBasis_PostSpike(ihbasprs,DTsim);
 gg.iht = iht;
 gg.ihbas = ihbas;

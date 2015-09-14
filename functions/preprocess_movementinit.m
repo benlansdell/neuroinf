@@ -147,3 +147,15 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
     	processed.spikes{idx} = sp;
 	    processed_withheld.spikes{idx} = sptest-trainmax;
 	end
+
+	processed_withheld.trialstartend = [];
+	for idx = 1:size(processed.trialstartend,1)
+		if processed.trialstartend(idx,1) > trainmax
+			tstart = processed.trialstartend(idx,1)-trainmax;
+			tend = processed.trialstartend(idx,2)-trainmax;
+			processed_withheld.trialstartend = [processed_withheld.trialstartend; tstart, tend];
+		end
+	end
+end
+
+

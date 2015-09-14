@@ -1,4 +1,4 @@
-function [tsp,Vmem,Ispk] = simGLMcpl(glmprs,Stim, time_limit);
+function [tsp,Vmem,Ispk, conv] = simGLMcpl(glmprs,Stim, time_limit, offset);
 % [tsp, Vmem,Ispk] = simGLMcpl(glmprs,Stim);
 % 
 % Compute response of (multi-cell) coupled-glm to stimulus Stim.
@@ -12,8 +12,8 @@ function [tsp,Vmem,Ispk] = simGLMcpl(glmprs,Stim, time_limit);
 
 % --------------- Check Inputs ----------------------------------
 global RefreshRate;
-if (nargin < 3) time_limit = 60; end
-
+if (nargin < 3) time_limit = 300; end
+conv = 1;
 
 ncells = size(glmprs.k,3);
 nbinsPerEval = 100;  % Default number of bins to update for each spike
@@ -30,14 +30,14 @@ else
 end
 
 [slen,swid] = size(Stim); % length of stimulus
-rlen = round(slen/dt);  % length of binned response
+rlen = round(slen/dt)  % length of binned response
 
 % -------------  Compute filtered resp to signal ----------------
 k = glmprs.k;  % stim filter
 Vstm = zeros(slen+2,ncells);
 if swid == size(k,2) % convolve if k is the same width as stimulus
     for j = 1:ncells
-        Vstm(2:end-1,j) = sameconv_monkey(Stim,k(:,:,j));
+        Vstm(2:end-1,j) = sameconv_monkey(Stim,k(:,:,j), offset);
     end
 else
     error('Mismatch between stimulus and filter size -- glmrunmod');
@@ -78,7 +78,9 @@ jbin = 1;
 tspnext = exprnd(1,1,ncells);
 rprev = zeros(1,ncells);
 t0=clock;
+prevspbins = zeros(300,1);
 while jbin <= rlen
+    jbin;
     iinxt = jbin:min(jbin+nbinsPerEval-1,rlen);  nii = length(iinxt);
     rrnxt = nlfun(Vmem(iinxt,:))*dt/RefreshRate; % Cond Intensity
     rrcum = cumsum(rrnxt+[rprev;zeros(nii-1,ncells)],1);  % Cumulative intensity
@@ -87,6 +89,7 @@ while jbin <= rlen
         rprev = rrcum(end,:);
     else   % Spike!
         [ispks,jspks] =  find(rrcum>=repmat(tspnext,nii,1));
+        prevspbins = [ispks; prevspbins(1:end-1)];
         spcells = unique(jspks(ispks == min(ispks))); % cell number(s)
         ispk = iinxt(min(ispks)); % time bin of spike(s)
         rprev = rrcum(min(ispks),:); % grab accumulated history to here
@@ -114,6 +117,11 @@ while jbin <= rlen
     end
     if etime(clock,t0) > time_limit
         disp('done');
+        break;
+    end
+    if all(diff(prevspbins)==-1)
+        disp('300 spiking bins in a row, suspect unstable GLM parameters, skipping')
+        conv = 0;
         break;
     end
 end

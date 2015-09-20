@@ -21,13 +21,13 @@ standardize = 0;
 [proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames, standardize);    
 [proc, proc_withheld] = remove_bad_units(goodunits, proc, proc_withheld);
 nB = size(proc.stim, 1);
-fn_out = './results_coupled_GLM_L1/';
+wd = './results_coupled_GLM_L1/';
 trim = 1;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
 offset = 1;
-mkdir(fn_out);
+mkdir(wd);
 
 %%%%%%%%%%%%%%%%%%%%%%
 %Fit L1 network model%
@@ -67,12 +67,12 @@ for l = 1:length(lambdas)
         opts = {'display', 'iter', 'maxiter', maxiter};
         [gg, negloglival] = MLfit_GLM_trim_L1(gg0,stim,opts,proc,trim, pca, offset, lambda);
         ggs_cpl{l,icell} = gg;
-        save([fn_out '/GLM_coupled_cell_' num2str(icell) '_lambda_' num2str(lambda) '.mat'],...
+        save([wd '/GLM_coupled_cell_' num2str(icell) '_lambda_' num2str(lambda) '.mat'],...
             'gg'); %, 'Rt_glm');
     end
 end
 %Save all
-save([fn_out '/all_units_network.mat'], 'ggs_cpl', 'lambdas');
+save([wd '/all_units_network.mat'], 'ggs_cpl', 'lambdas');
 
 for l = 1:length(lambdas)
     for i = 1:nU
@@ -121,4 +121,4 @@ for l = 1:length(lambdas)
     end
 end
 
-save([fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm', 'logl_glm');
+save([wd '/GLM_coupled_simulation.mat'], 'Rt_glm', 'logl_glm');

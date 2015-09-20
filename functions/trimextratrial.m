@@ -28,7 +28,7 @@ function [MSTM, SPNDS, SPNDS2] = trimextratrial(MSTM, SPNDS, processed, SPNDS2)
 	end
 
 	if nargin == 4
-		nC = length(SPNDS2)
+		nC = length(SPNDS2);
 		for ii = 1:nC
 			%Chop out spikes past end of stim
 			SPNDS2{ii}(SPNDS2{ii}*dt>nB) = [];

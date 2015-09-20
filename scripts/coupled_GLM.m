@@ -19,12 +19,12 @@ nRep = 10;                      %no. sim repetitions
 std = 0;
 [proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames, std);    
 nB = size(proc.stim, 1);
-fn_out = './results_coupled_glm/';
+wd = './results_coupled_glm/';
 trim = 1;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
-mkdir(fn_out);
+mkdir(wd);
 
 %Remove the 'bad' units from the dataset
 [proc, proc_withheld] = remove_bad_units(goodunits, proc, proc_withheld);
@@ -60,12 +60,12 @@ for icell = 1:nU
     opts = {'display', 'iter', 'maxiter', maxiter};
     [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim,pca);
     ggs_cpl{icell} = gg;
-    save([fn_out '/GLM_coupled_cell_' num2str(icell) '.mat'], 'gg');
+    save([wd '/GLM_coupled_cell_' num2str(icell) '.mat'], 'gg');
 end
 
 %Save all
-save([fn_out '/all_units_network.mat'], 'ggs_cpl');
-load([fn_out '/all_units_network.mat']);
+save([wd '/all_units_network.mat'], 'ggs_cpl');
+load([wd '/all_units_network.mat']);
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %Simulate network model%
@@ -105,11 +105,11 @@ for i = 1:nU
     %Compute log-likelihood:
     logl_glm(i) = mean(Rt.*log(Rt_glm{i})-(Rt_glm{i})*(1/RefreshRate)) ;
 end
-save([fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm', 'logl_glm');
+save([wd '/GLM_coupled_simulation.mat'], 'Rt_glm', 'logl_glm');
 
 %Save stuff needed to run this chunk of code
 [proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames, std);    
-save([fn_out '/preprocessed_networkglm_sims.mat'], 'proc_withheld', 'nU', 'Rt_glm', 'goodunits', 'RefreshRate')
+save([wd '/preprocessed_networkglm_sims.mat'], 'proc_withheld', 'nU', 'Rt_glm', 'goodunits', 'RefreshRate')
 
 logl_glm_uncoupled = [];
 for idx = 1:nU
@@ -123,20 +123,20 @@ scatter(logl_glm, logl_glm_uncoupled)
 hold on; plot([-1.5 0], [-1.5 0], 'r')
 xlabel('Coupled log-likelihood');
 ylabel('Uncoupled log-likelihood')
-saveplot(gcf, [fn_out '/GLM_loglikelihood_compare.eps'])
+saveplot(gcf, [wd '/GLM_loglikelihood_compare.eps'])
 
 %%%%%%%%%%%%%%%%%%%%%%
 %Plot network filters%
 %%%%%%%%%%%%%%%%%%%%%%
 
-plot_filters_network_all(ggs_cpl, proc, [fn_out '/all_units_network_filters.eps'], goodunits);
+plot_filters_network_all(ggs_cpl, proc, [wd '/all_units_network_filters.eps'], goodunits);
 load('./results_uncoupled_GLM/all_units.mat')
-plot_filters_network_compare(ggs_cpl, ggs, proc, [fn_out '/all_units_network_filters_compare.eps'], goodunits);
+plot_filters_network_compare(ggs_cpl, ggs, proc, [wd '/all_units_network_filters_compare.eps'], goodunits);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %4 Plot coupled simulations%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-load([fn_out '/GLM_coupled_simulation.mat'])
+load([wd '/GLM_coupled_simulation.mat'])
 for idx = 1:nU
     icell = (idx);
     clf
@@ -170,7 +170,7 @@ for idx = 1:nU
     xlabel('seconds')
     ylabel('predicted probability spiking')
     legend('true spike train', 'Coupled GLM', 'Uncoupled GLM')
-    saveplot(gcf, [fn_out '/GLM_coupled_cell_' num2str(goodunits(icell)) '_sim.eps'], 'eps', [6 6]);
+    saveplot(gcf, [wd '/GLM_coupled_cell_' num2str(goodunits(icell)) '_sim.eps'], 'eps', [6 6]);
     
     clf
     sigma_fr = .01;
@@ -203,10 +203,10 @@ for idx = 1:nU
     xlabel('seconds')
     ylabel('predicted probability spiking')
     legend('true spike train', 'Coupled GLM', 'Uncoupled GLM')
-    saveplot(gcf, [fn_out '/GLM_coupled_cell_' num2str(goodunits(icell)) '_sim_zoom.eps'], 'eps', [6 6]);
+    saveplot(gcf, [wd '/GLM_coupled_cell_' num2str(goodunits(icell)) '_sim_zoom.eps'], 'eps', [6 6]);
 
     simsp = uncoupled.Rt_glm;
     simsp_cpl = Rt_glm{idx};
     truesp = proc_withheld.spiketrain(:,icell);
-    save([fn_out '/GLM_sims_cell_' num2str(goodunits(icell)) '.mat'], 'truesp', 'simsp', 'simsp_cpl');
+    save([wd '/GLM_sims_cell_' num2str(goodunits(icell)) '.mat'], 'truesp', 'simsp', 'simsp_cpl');
 end

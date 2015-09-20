@@ -55,7 +55,7 @@ end
 rlen = round(slen/OPRS.dt);
 nx = OPRS.nx; 
 nt = OPRS.nt;
-ncols = nx*nt
+ncols = nx*nt;
 MSTM = zeros(slen,ncols);
 
 for i = 1:nx

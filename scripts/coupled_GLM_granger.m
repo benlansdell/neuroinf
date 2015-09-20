@@ -21,13 +21,13 @@ standardize = 0;
 [proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames, standardize);    
 [proc, proc_withheld] = remove_bad_units(goodunits, proc, proc_withheld);
 nB = size(proc.stim, 1);
-fn_out = './results_coupled_GLM_granger/';
+wd = './results_coupled_GLM_granger/';
 trim = 1;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
 offset = 1;
-mkdir(fn_out);
+mkdir(wd);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Fit Granger network model%
@@ -68,7 +68,7 @@ for icell = 1:nU
     opts = {'display', 'iter', 'maxiter', maxiter};
     [gg, negloglival_all] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca, offset);
     ggs_cpl{icell} = gg;
-    save([fn_out '/GLM_coupled_cell_' num2str(icell) '.mat'], 'gg');
+    save([wd '/GLM_coupled_cell_' num2str(icell) '.mat'], 'gg');
 
     %Run by systematically dropping coupling terms from fitting
     nC = nU-1;

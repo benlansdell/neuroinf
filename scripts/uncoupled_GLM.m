@@ -1,6 +1,10 @@
+%Set to working directory
+wd = '.';
+
 %%%%%%%%%%%%%%%%%%%
 %1 Preprocess data%
 %%%%%%%%%%%%%%%%%%%
+
 goodunits = [4,7,8,14,15,17,20,24,36,41];
 
 global RefreshRate;
@@ -19,12 +23,13 @@ nRep = 18;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize);    
 nB = size(proc.stim, 1);
-wd = './results_uncoupled_GLM/';
+fn_out = '/results/';
 trim = 1;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
-mkdir(wd);
+offset = 1;
+mkdir([wd fn_out]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -49,15 +54,15 @@ for icell = goodunits
     gg0.tspi = 1;
 
     opts = {'display', 'iter', 'maxiter', maxit};
-    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim);
+    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, offset);
     ggs{icell} = gg;
 
-    save([wd '/GLM_cell_' num2str(icell) '.mat'], 'gg');
+    save([wd fn_out '/GLM_cell_' num2str(icell) '.mat'], 'gg');
 end
 
 %Save all
-save([wd '/all_units.mat'], 'ggs');
-%load([wd '/all_units.mat']);
+save([wd fn_out '/all_units.mat'], 'ggs');
+%load([wd fn_out '/all_units.mat']);
 
 %%%%%%%%%%%%%%%%%%%
 %3 Simulate models%
@@ -68,7 +73,7 @@ units_conv = zeros(nU,1);
 logl_glm_uncoupled = [];
 
 for icell = goodunits
-    load([wd '/GLM_cell_' num2str(icell) '.mat']);
+    load([wd fn_out '/GLM_cell_' num2str(icell) '.mat']);
     %Simulation with test stim
     disp(num2str(icell));
     Tt = size(proc_withheld.stim(:,:),1);
@@ -77,21 +82,21 @@ for icell = goodunits
     nconverged = 0;
     for ir = 1:nRep
         ir
-        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, proc_withheld.stim(:,:)/p, time_limit, 1);
+        [iR_glm,vmem,Ispk, converged] = simGLM_monkey(gg, proc_withheld.stim(:,:)/p, time_limit, 1);
         Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
-        nconverged = nconverged + conv;
+        nconverged = nconverged + converged;
     end
     units_conv(icell) = nconverged;
     Rt_glm = Rt_glm'/nRep + 1e-8;
     logl_glm = mean(Rt.*log(Rt_glm)-(Rt_glm)/RefreshRate) ;
     logl_glm_uncoupled(icell) = logl_glm;
-    save([wd '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm', 'nconverged', 'logl_glm');
+    save([wd fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm', 'nconverged', 'logl_glm');
 end
 
 %%%%%%%%%
 %4 Plot %
 %%%%%%%%%
-plot_filters(ggs, proc, [wd '/all_units_filters.eps'], goodunits);
+plot_filters(ggs, proc, [wd fn_out '/all_units_filters.eps'], goodunits);
 
 for icell = goodunits
     clf
@@ -104,9 +109,8 @@ for icell = goodunits
     
     tstart = ceil(600*RefreshRate);
     tend = ceil(750*RefreshRate);
-    fn_in = [wd '/GLM_cell_' num2str(icell) '.mat'];
-    load([wd '/GLM_cell_' num2str(icell) '.mat'])
-    load([wd '/GLM_cell_simulation_' num2str(icell) '.mat'])
+    load([wd fn_out '/GLM_cell_' num2str(icell) '.mat'])
+    load([wd fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'])
     tidx = tstart:tend;
     truesp = proc_withheld.spiketrain(tidx,icell);
     pillowsimsp = Rt_glm(tidx);
@@ -125,5 +129,5 @@ for icell = goodunits
     xlabel('seconds')
     ylabel('predicted probability spiking')
     legend('true spike train', 'Pillow''s GLM')
-    saveplot(gcf, [wd '/GLM_cell_' num2str(icell) '_sim.eps'], 'eps', [6 6]);
+    saveplot(gcf, [wd fn_out '/GLM_cell_' num2str(icell) '_sim.eps'], 'eps', [6 6]);
 end

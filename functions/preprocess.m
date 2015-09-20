@@ -1,4 +1,4 @@
-function [processed, processed_withheld] = preprocess(datafile, binsize, dt, frames, stddev)
+function [processed, processed_withheld] = preprocess(datafile, binsize, dt, frames, stddev, goodunits)
 	%Preprocess both spike data and stim data
 	%
 	%Usage:
@@ -9,6 +9,8 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
 	%		binsize = size in seconds of each time bin for stim
 	%		dt = relative size of bins spike times are provided at		
 	%		frames = number of previous stim frames to include
+	%		stddev = (optional, default = 0) whether to normalize stim
+	%		goodunits = (optional) if provided, will only return unit indices specified
 	%	
 	%Output:
 	%		processed is a structure containing the following fields:
@@ -155,6 +157,10 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
 			tend = processed.trialstartend(idx,2)-trainmax;
 			processed_withheld.trialstartend = [processed_withheld.trialstartend; tstart, tend];
 		end
+	end
+
+	if nargin == 6
+		[processed, processed_withheld] = remove_units(goodunits, proc, proc_withheld)
 	end
 end
 

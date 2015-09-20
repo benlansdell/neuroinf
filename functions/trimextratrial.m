@@ -44,6 +44,8 @@ function [MSTM, SPNDS, SPNDS2] = trimextratrial(MSTM, SPNDS, processed, SPNDS2)
 				trialendstart = trialendstart-(trimend-trimstart+1);
 			end
 		end
+	else
+		SPNDS2 = {};
 	end
 end
 

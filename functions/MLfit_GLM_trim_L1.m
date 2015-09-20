@@ -1,4 +1,4 @@
-function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed, trim, pcas, offset, lambda);
+function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed, trim, offset, lambda);
 %  [ggnew,fval,H] = MLfit_GLM(gg,Stim,optimArgs);
 % 
 %  Computes the ML estimate for GLM params, using grad and hessians.
@@ -16,12 +16,8 @@ function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed, trim, pcas, 
 %Only include times within stimulus that are within trial
 
 MAXSIZE  = 1e7;  % Maximum amount to be held in memory at once;
-if nargin < 7
-	offset = 1;
-end
-if nargin < 8
-	lambda = 1;
-end
+if (nargin < 6) offset = 1; end
+if (nargin < 7) lambda = 1; end
 
 % Set optimization parameters 
 if nargin > 2
@@ -30,12 +26,8 @@ else
     opts = optimset('Gradobj','on','Hessian','on','display','iter');
 end
 
-if nargin < 6
-	pcas = 0;
-end
-
 % Set initial params
-prs0 = extractFitPrs_GLM_trim(gg,Stim,MAXSIZE,processed, trim, pcas, offset);
+prs0 = extractFitPrs_GLM_trim(gg,Stim,MAXSIZE,processed, trim, offset);
 
 % minimize negative log likelihood. The warm-up solution for L1 reg
 [prs,fval] = fminunc(@Loss_GLM_logli,prs0,opts);

@@ -1,4 +1,4 @@
-function setupfitting_GLM_trim(gg, Stim, maxsize, processed, trim, pcas, offset);
+function setupfitting_GLM_trim(gg, Stim, maxsize, processed, trim, offset);
 %  setupfitting_GLM_trim(gg, Stim,maxsize);
 %
 %  Sets global variables for ML estimation of GLM model using 'maxli_GLM'
@@ -49,42 +49,19 @@ OPRS.ktbas = gg.ktbas;
 
 % ---- Filter stimulus with spatial and temporal bases -----
 [slen,swid] = size(Stim);
-if pcas ~= 1
-    if (OPRS.nx ~= swid)
-        error('Mismatch between stim width and kernel width');
-    end
+if (OPRS.nx ~= swid)
+    error('Mismatch between stim width and kernel width');
 end
 rlen = round(slen/OPRS.dt);
-if pcas == 1
-    nx = swid;
-    frames = processed.frames;
-    nt = 2*frames+1;
-else
-    nx = OPRS.nx; 
-    nt = OPRS.nt;
-end
+nx = OPRS.nx; 
+nt = OPRS.nt;
 ncols = nx*nt
 MSTM = zeros(slen,ncols);
 
-if pcas ~= 1
-    for i = 1:nx
-        for j = 1:nt
-            MSTM(:,(i-1)*nt+j) = sameconv_monkey(Stim(:,i),gg.ktbas(:,j), offset);
-        end
+for i = 1:nx
+    for j = 1:nt
+        MSTM(:,(i-1)*nt+j) = sameconv_monkey(Stim(:,i),gg.ktbas(:,j), offset);
     end
-else
-    offsets = -frames:frames;
-    Stim = vertcat(zeros(frames, nx), Stim, zeros(frames, nx));
-    nB = size(Stim,1);
-    for i = 1:nx
-        for j = 1:nt
-            offset = offsets(j);
-            jj = (frames+offset+1):(nB-frames+offset);
-            MSTM(:,(i)*nt-j+1) = Stim(jj, i);
-        end
-    end
-    size(MSTM);
-    MSTM = MSTM*gg.ktbas;
 end
 
 %Chop out times and spikes that are outside of a trial

@@ -1,17 +1,8 @@
-function [Coh, Pwr1_tot, Pwr2_tot, K] = coherence_hyp(truesp, simsp, N_sample_max)
-	%***BEN: THIS IS FOR ONE SEGMENT - YOU NEED TO PUT THIS IN A "SUPER-LOOP" THAT COMPUTES
-	%THE COHERENCE - A COMPLEX NUMBER - FOR EACH SEGMENT AND ADDS THE COMPLEX
-	%COHERENCES TOGETHER and DIVIDES BY "N" TO COMPUTE THE AVERAGE OVER
-	%SEGMENTS. THEN PLOT THE ABSOLUTE VALUE, A NUMBER BETWEEN ZERO AND ONE.
-	%NOTE 1 - BY PADDING, I AM MAKING ALL SPECTRAL TRACES OF EQUAL LENGTH.
-	%NOTE 2 - BY USING TAPERS, I CAN DEFINE THE AVERAGING OVER TAPERS IN THE
-	%SPECTRAL ESTIMATE BASED ON A FIXED BANDWIDTH (WHICH I CHOOSE TO BE
-	%f_Nyquist/25 = 2 Hz); THIS PERMITS ADDTION OF SPECTRA FOR DIFFERENT LENGTH
-	%TIME SERIES***
-	N_sample=length(truesp) ; %THIS MUST BE CALCUALTED FOR EACH SET OF TRACES
+function [Coh, Pwr1_tot, Pwr2_tot, K] = coherence(truesp, simsp, N_sample_max)
+	N_sample=length(truesp) ; 
 	F_sample=100; % Sampling rate
 	Pad = 2^(1+nextpow2(N_sample_max));  
-	% pad to > 2-times data length - ***BEN: YOU SHOULD FIX AT THE VALUE CALCULATED FOR THE LARGEST N_sample IN THE DATA SET***
+	% pad to > 2-times data length -
 	f=linspace( 0, 1, Pad )*F_sample; %Frequency base
 	NW= N_sample*0.5*(1/50); %Time-bandwidth product with bandwidth as a fraction (chose as 1/25) of f_Nyquist (0.5 in computer units) on a sample-by-sample basis
 	K=1;fix(2*NW-1); % Degrees of freedom or 2*p-1

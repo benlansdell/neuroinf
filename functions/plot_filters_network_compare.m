@@ -1,4 +1,4 @@
-function plot_filters_network_all(models, models_uncoupled, processed, fn_out, goodunits)
+function plot_filters_network_compare(models, models_uncoupled, processed, fn_out, goodunits)
 	%Plot filters of a fitted GLM model, along with other fit statistics
 	%     
 	%Input:

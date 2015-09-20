@@ -16,12 +16,11 @@ nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
 nRep = 18;                      %no. sim repetitions
-std = 0;
-[proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames, std);    
+standardize = 0;
+[proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize);    
 nB = size(proc.stim, 1);
 fn_out = './results_uncoupled_GLM/';
 trim = 1;
-pca = 0;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
@@ -45,24 +44,24 @@ for icell = goodunits
     sta = reshape(sta,nF,[]);
 
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec_refract(sta,dt_glm,Dt);
+    gg0 = makeFittingStruct_GLM_monkey(sta,dt_glm,Dt);
     gg0.tsp = resp';
     gg0.tspi = 1;
 
     opts = {'display', 'iter', 'maxiter', maxit};
-    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca);
+    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim);
     ggs{icell} = gg;
 
-    save([fn_out '/GLM_cell_' num2str(icell) '.mat'], 'gg');
+    %save([fn_out '/GLM_cell_' num2str(icell) '.mat'], 'gg');
 end
 
 %Save all
 save([fn_out '/all_units.mat'], 'ggs');
-load([fn_out '/all_units.mat']);
+%load([fn_out '/all_units.mat']);
 
-%%%%%%%%%%%%%%%%%
-%Simulate models%
-%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%
+%3 Simulate models%
+%%%%%%%%%%%%%%%%%%%
 
 time_limit = 80;
 units_conv = zeros(nU,1);
@@ -72,13 +71,13 @@ for icell = goodunits
     load([fn_out '/GLM_cell_' num2str(icell) '.mat']);
     %Simulation with test stim
     disp(num2str(icell));
-    Tt = size(proc_withheld.stim(1:20000,:),1);
-    Rt = proc_withheld.spiketrain(1:20000,icell);
+    Tt = size(proc_withheld.stim(:,:),1);
+    Rt = proc_withheld.spiketrain(:,icell);
     Rt_glm = zeros(1,Tt);
     nconverged = 0;
     for ir = 1:nRep
         ir
-        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, proc_withheld.stim(1:20000,:)/p, time_limit, 1);
+        [iR_glm,vmem,Ispk, conv] = simGLM_monkey(gg, proc_withheld.stim(:,:)/p, time_limit, 1);
         Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
         nconverged = nconverged + conv;
     end
@@ -89,50 +88,11 @@ for icell = goodunits
     save([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm', 'nconverged', 'logl_glm');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Test number of required repeats%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-time_limit = 80;
-nRep = 400;
-units_conv = zeros(nU,1);
-logl_glm_uncoupled = [];
-for ii = 1:length(goodunits)
-    icell = goodunits(ii);
-    load([fn_out '/GLM_cell_' num2str(icell) '.mat']);
-    %Simulation with test stim
-    disp(num2str(icell));
-    Tt = size(proc_withheld.stim,1);
-    Rt = proc_withheld.spiketrain(:,icell);
-    Rt_glm = zeros(nRep,Tt);
-    nconverged = 0;
-    for ir = 1:nRep
-        ir
-        [iR_glm,vmem,Ispk, converged] = simGLM_monkey(gg, proc_withheld.stim/p, time_limit, 0);
-        Rt_glm(ir, ceil(iR_glm)) = Rt_glm(ir, ceil(iR_glm))+1;
-        nconverged = nconverged + converged;
-    end
-    units_conv(icell) = nconverged;    
-    for ir = 1:nRep
-        simRt = sum(Rt_glm(1:ir,:))/ir+1e-8;
-        logl_glm = mean(Rt.*log(simRt')-simRt'/RefreshRate) ;
-        logl_glm_uncoupled(ii, ir) = logl_glm;
-    end
-end
-plot(logl_glm_uncoupled(:,2:end)');
-xlabel('no. reps')
-ylabel('log-likelihood')
-title('uncoupled cells')
-saveplot(gcf, [fn_out '/GLM_likelihood_repeat_nos.eps'])
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-%3 Plot uncoupled filters%
-%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%
+%4 Plot %
+%%%%%%%%%
 plot_filters(ggs, proc, [fn_out '/all_units_filters.eps'], goodunits);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%4 Plot uncoupled simulations%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for icell = goodunits
     clf
     sigma_fr = .25;

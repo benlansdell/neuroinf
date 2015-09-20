@@ -28,7 +28,6 @@ function saveplot(h, filename, format, dimensions)
 		end
 	end
 
-	%Add a boundary of 4 pts. I'm not sure if this is working right
 	pts = 4*1/72;
 	box = [pts, pts, dimensions(1)-2*pts, dimensions(2)-2*pts];
 

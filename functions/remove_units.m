@@ -1,4 +1,4 @@
-function [processed, processed_withheld] = remove_bad_units(indices, proc, proc_withheld)
+function [processed, processed_withheld] = remove_units(indices, proc, proc_withheld)
 	processed = proc;
 	processed.spikes = processed.spikes(indices);
 	processed.spiketrain = processed.spiketrain(:,indices);

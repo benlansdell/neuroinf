@@ -160,7 +160,7 @@ function [processed, processed_withheld] = preprocess(datafile, binsize, dt, fra
 	end
 
 	if nargin == 6
-		[processed, processed_withheld] = remove_units(goodunits, proc, proc_withheld)
+		[processed, processed_withheld] = remove_units(goodunits, processed, processed_withheld);
 	end
 end
 

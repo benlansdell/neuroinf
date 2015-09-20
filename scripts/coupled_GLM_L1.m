@@ -23,13 +23,13 @@ nRep = 50;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);
-fn_out = './results_coupled_GLM_L1/';
+fn_out = './results/';
 trim = 1;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
 offset = 1;
-mkdir(fn_out);
+mkdir([wd fn_out]);
 
 %%%%%%%%%%%%%%%%%%%%%%
 %Fit L1 network model%
@@ -58,7 +58,7 @@ for l = 1:length(lambdas)
         sta = stacked'*sptrain/sum(sptrain)-mean(stacked,1)'; 
         sta = reshape(sta,nF,[]);
         nspk(icell) = sum(sptrain);
-        gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec_refract(sta,dt,Dt);
+        gg0 = makeFittingStruct_GLM_monkey(sta,dt,Dt);
         gg0.ihbas2 = gg0.ihbas;
         gg0.tsp = resp';
         gg0.tspi = 1;
@@ -67,14 +67,14 @@ for l = 1:length(lambdas)
         %Add terms for other spike filters
         gg0.ih = zeros(size(gg0.ih,1),nU);
         opts = {'display', 'iter', 'maxiter', maxiter};
-        [gg, negloglival] = MLfit_GLM_trim_L1(gg0,stim,opts,proc,trim, pca, offset, lambda);
+        [gg, negloglival] = MLfit_GLM_trim_L1(gg0,stim,opts,proc,trim, offset, lambda);
         ggs_cpl{l,icell} = gg;
         save([fn_out '/GLM_coupled_cell_' num2str(icell) '_lambda_' num2str(lambda) '.mat'],...
             'gg'); %, 'Rt_glm');
     end
 end
 %Save all
-save([fn_out '/all_units_network.mat'], 'ggs_cpl', 'lambdas');
+save([fn_out '/all_units_network_L1.mat'], 'ggs_cpl', 'lambdas');
 
 for l = 1:length(lambdas)
     for i = 1:nU
@@ -123,4 +123,4 @@ for l = 1:length(lambdas)
     end
 end
 
-save([fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm', 'logl_glm');
+save([fn_out '/GLM_coupled_simulation_L!.mat'], 'Rt_glm', 'logl_glm');

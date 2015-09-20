@@ -23,13 +23,14 @@ nRep = 50;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);
-fn_out = './results_coupled_GLM_granger/';
+fn_out = './results/';
 trim = 1;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
 offset = 1;
-mkdir(fn_out);
+alphalevel = 0.05;
+mkdir([wd fn_out]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Fit Granger network model%
@@ -52,7 +53,7 @@ for icell = 1:nU
     sta = stacked'*sptrain/sum(sptrain)-mean(stacked,1)'; 
     sta = reshape(sta,nF,[]);
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec_refract(sta,dt,Dt);
+    gg0 = makeFittingStruct_GLM_monkey(sta,dt,Dt);
     gg0.ihbas2 = gg0.ihbas;
     gg0.tsp = resp';
     gg0.tspi = 1;
@@ -68,11 +69,10 @@ for icell = 1:nU
 
     %Run optimization
     opts = {'display', 'iter', 'maxiter', maxiter};
-    [gg, negloglival_all] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca, offset);
+    [gg, negloglival_all] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, offset);
     ggs_cpl{icell} = gg;
-    save([fn_out '/GLM_coupled_cell_' num2str(icell) '.mat'], 'gg');
 
-    %Run by systematically dropping coupling terms from fitting
+    %Run by exhaustively dropping coupling terms from fitting
     nC = nU-1;
     for j = 1:nC
         jcell = nicell(j);
@@ -84,9 +84,14 @@ for icell = 1:nU
         gg0.tsp2 = coupled;
         gg0.ih = zeros(size(gg0.ih,1),nC);
         opts = {'display', 'iter', 'maxiter', maxiter};
-        [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, pca, offset);
+        [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, offset);
         grangerstat(icell, jcell) = negloglival - negloglival_all;
     end
 end
 
 %Perform hypothesis test, 
+dof = size(gg0.ih,1);
+GCpval = 1-chi2cdf(grangerstat, dof);
+GCsig = multiple_sig(GCpval, alphalevel);
+
+save([wd fn_out '/grangerstats.mat'], 'grangerstats', 'GCpval', 'GCsig');

@@ -4,7 +4,7 @@ wd = '.';
 %%%%%%%%%%%%%%%%%%%
 %1 Preprocess data%
 %%%%%%%%%%%%%%%%%%%
-goodunits = [4,7,8,14,15,17,20,24,36,41];
+goodunits = [4,7,14,15,17,20,24,36,41];
 
 global RefreshRate;
 RefreshRate = 100;              %Stimulus refresh rate
@@ -18,7 +18,7 @@ frames = 80;                    %no. stim frames
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 10;                      %no. sim repetitions
+nRep = 20;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);
@@ -29,15 +29,14 @@ maxit = 20;
 dt_glm = 0.1;
 mkdir([wd fn_out]);
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%
-%2 Fitting uncoupled GLM%
+%2 Fitting coupled GLM%
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 ggs_cpl = {};
 maxiter = 20;
 for icell = 1:nU
-    disp(num2str(icell));
+    disp(['Fitting unit ' num2str(goodunits(icell))]);
     stim = proc.stim;
     stim = stim/p;
     resp = proc.spikes{icell};
@@ -53,7 +52,7 @@ for icell = 1:nU
     sta = stacked'*sptrain/sum(sptrain)-mean(stacked,1)'; 
     sta = reshape(sta,nF,[]);
     nspk(icell) = sum(sptrain);
-    gg0 = makeFittingStruct_GLM_monkey_gauss_basisvec_refract(sta,dt,Dt);
+    gg0 = makeFittingStruct_GLM_monkey(sta,dt,Dt);
     gg0.ihbas2 = gg0.ihbas;
     gg0.tsp = resp';
     gg0.tspi = 1;
@@ -62,7 +61,7 @@ for icell = 1:nU
     %Add terms for other spike filters
     gg0.ih = zeros(size(gg0.ih,1),nU);
     opts = {'display', 'iter', 'maxiter', maxiter};
-    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim,pca);
+    [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim);
     ggs_cpl{icell} = gg;
     save([wd fn_out '/GLM_coupled_cell_' num2str(icell) '.mat'], 'gg');
 end
@@ -77,7 +76,7 @@ load([wd fn_out '/all_units_network.mat']);
 
 stim = proc_withheld.stim;
 stim = stim/p;
-stim = stim(1:20000,:);
+stim = stim(:,:);
 time_limit = 2400;
 Tt = size(stim,1);
 Rt_glm = {};
@@ -95,10 +94,9 @@ for ir = 1:nRep
     end
 end
 
-nRep = 10;
 logl_glm = [];
 for i = 1:nU
-    Rt = proc_withheld.spiketrain(1:20000,i);
+    Rt = proc_withheld.spiketrain(:,i);
     Rt_glm{i} = Rt_glm{i}'/nRep + 1e-8;
     if size(Rt_glm{i},1)==1
         Rt_glm{i} = Rt_glm{i}';
@@ -109,20 +107,22 @@ end
 save([wd fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm', 'logl_glm');
 
 %Save stuff needed to run this chunk of code
-[proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames, std);    
+[proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize);    
 save([wd fn_out '/preprocessed_networkglm_sims.mat'], 'proc_withheld', 'nU', 'Rt_glm', 'goodunits', 'RefreshRate')
 
 %Compare likelihood to uncoupled likelihood:
+load([wd fn_out '/GLM_coupled_simulation.mat'])
 logl_glm_uncoupled = [];
 for idx = 1:nU
     icell = goodunits(idx);
     uncoupled = load([wd fn_out '/GLM_cell_simulation_' num2str(icell) '.mat']);
     logl_glm_uncoupled(idx) = uncoupled.logl_glm;
 end
-scatter(logl_glm, logl_glm_uncoupled)
+clf
+scatter(logl_glm_uncoupled, logl_glm)
 hold on; plot([-1.5 0], [-1.5 0], 'r')
-xlabel('Coupled log-likelihood');
-ylabel('Uncoupled log-likelihood')
+xlabel('Uncoupled log-likelihood');
+ylabel('Coupled log-likelihood')
 saveplot(gcf, [wd fn_out '/GLM_loglikelihood_compare.eps'])
 
 %%%%%%%%%%%%%%%%%%%%%%

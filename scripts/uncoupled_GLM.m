@@ -4,8 +4,7 @@ wd = '.';
 %%%%%%%%%%%%%%%%%%%
 %1 Preprocess data%
 %%%%%%%%%%%%%%%%%%%
-
-goodunits = [4,7,8,14,15,17,20,24,36,41];
+goodunits = [4,7,14,15,17,20,24,36,41];
 
 global RefreshRate;
 RefreshRate = 100;              %Stimulus refresh rate
@@ -19,7 +18,7 @@ frames = 80;                    %no. stim frames
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 18;                      %no. sim repetitions
+nRep = 500;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize);    
 nB = size(proc.stim, 1);
@@ -76,10 +75,12 @@ for icell = goodunits
     load([wd fn_out '/GLM_cell_' num2str(icell) '.mat']);
     %Simulation with test stim
     disp(num2str(icell));
+    %Only within trial times...
     Tt = size(proc_withheld.stim(:,:),1);
     Rt = proc_withheld.spiketrain(:,icell);
     Rt_glm = zeros(1,Tt);
     nconverged = 0;
+
     for ir = 1:nRep
         ir
         [iR_glm,vmem,Ispk, converged] = simGLM_monkey(gg, proc_withheld.stim(:,:)/p, time_limit, 1);

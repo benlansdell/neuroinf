@@ -44,7 +44,7 @@ maxiter = 10;
 %For reals
 maxiter = 20;
 lambdas = [.1 .3 1 3 10 30 100 300 1000];
-for l = 7:length(lambdas)
+for l = 1:length(lambdas)
     lambda = lambdas(l);
     for icell = 1:nU
         disp(num2str(icell));
@@ -125,28 +125,50 @@ for l = 1:length(lambdas)
 end
 
 logl_glm = [];
+nB = size(proc_withheld.intrial,1);
 for l = 1:length(lambdas)
     for i = 1:nU
-        Rt = proc_withheld.spiketrain(:,i);
+        Rt = proc_withheld.spiketrain(1:20000,i);
+        tidx = ((1:nB)<=20000) & (proc_withheld.intrial==1)';
+        Rt = Rt(tidx);
+        %Only look within trial times...
         Rt_glm{l,i} = Rt_glm{l,i}'/nRep + 1e-8;
         if size(Rt_glm{l,i},1)==1
             Rt_glm{l,i} = Rt_glm{l,i}';
         end
         %Compute log-likelihood:
-        logl_glm(l,i) = mean(Rt.*log(Rt_glm{l,i})-(Rt_glm{l,i})*(dt)) ;
+        logl_glm(l,i) = mean(Rt.*log(Rt_glm{l,i}(tidx))-(Rt_glm{l,i}(tidx))*(1/RefreshRate)) ;
     end
 end
+
+logl_glm = [];
+nB = size(proc_withheld.intrial,1);
+for l = 1:length(lambdas)
+    for i = 1:nU
+        Rt = proc_withheld.spiketrain(1:20000,i);
+        %Compute log-likelihood:
+        logl_glm(l,i) = mean(Rt.*log(Rt_glm{l,i})-(Rt_glm{l,i})*(1/RefreshRate)) ;
+    end
+end
+
 save([fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm', 'logl_glm');
 
 %Plot coherence of samples
+for icell = 1:nU
+    Rt = proc_withheld.spiketrain(1:20000,icell);
+    uncoupled = load(['./results4_gauss_move_5hz_maxit20_5frame/GLM_cell_simulation_' num2str(goodunits(icell)) '.mat']);
+    l = 2;
+    plot_coherence([fn_out '/GLM_coherence_lambda_' num2str(lambdas(l)) '_cell_' num2str(goodunits(icell)) '.eps'], Rt, Rt_glm{l,icell}, uncoupled.Rt_glm(1:20000), binsize);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %4 Plot coupled simulations%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-load([fn_out '/GLM_coupled_simulation.mat'])
+load([fn_out '/GLM_coupled_simulation.mat']);
+l = 1;
 for idx = 1:nU
     icell = (idx);
-    clf
+    clf;
     sigma_fr = .25;
     sigma_fr = sigma_fr*RefreshRate;
     sz = sigma_fr*3*2;
@@ -154,13 +176,14 @@ for idx = 1:nU
     gaussFilter_fr = exp(-x.^2/(2*sigma_fr^2));
     gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
     
-    tstart = ceil(500*RefreshRate);
-    tend = ceil(650*RefreshRate);
+    tstart = ceil(50*RefreshRate);
+    tend = ceil(200*RefreshRate);
     tidx = tstart:tend;
     truesp = proc_withheld.spiketrain(tidx,icell);
-    pillowsimsp = Rt_glm{idx}(tidx);
-    uncoupled = load([fn_out '/GLM_cell_simulation_' num2str(goodunits(icell)) '.mat']);
+    pillowsimsp = Rt_glm{l,idx}(tidx);
+    uncoupled = load(['./results4_gauss_move_5hz_maxit20_5frame/GLM_cell_simulation_' num2str(goodunits(icell)) '.mat']);
     pillowsimsp_uncoupled = uncoupled.Rt_glm(tidx);
+
     subplot(2,1,1)
     hold on
     plot(tidx*proc.binsize, 500*proc_withheld.grip(tidx), 'k');
@@ -187,11 +210,11 @@ for idx = 1:nU
     gaussFilter_fr = exp(-x.^2/(2*sigma_fr^2));
     gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
     
-    tstart = ceil(500*RefreshRate);
-    tend = ceil(505*RefreshRate);
+    tstart = ceil(50*RefreshRate);
+    tend = ceil(55*RefreshRate);
     tidx = tstart:tend;
     truesp = proc_withheld.spiketrain(tidx,icell);
-    pillowsimsp = Rt_glm{idx}(tidx);
+    pillowsimsp = Rt_glm{l,idx}(tidx);
     pillowsimsp_uncoupled = uncoupled.Rt_glm(tidx);
     subplot(2,1,1)
     hold on
@@ -213,14 +236,14 @@ for idx = 1:nU
     saveplot(gcf, [fn_out '/GLM_coupled_cell_' num2str(goodunits(icell)) '_sim_zoom.eps'], 'eps', [6 6]);
 
     simsp = uncoupled.Rt_glm;
-    simsp_cpl = Rt_glm{idx};
+    simsp_cpl = Rt_glm{l,idx};
     truesp = proc_withheld.spiketrain(:,icell);
     save([fn_out '/GLM_sims_cell_' num2str(goodunits(icell)) '.mat'], 'truesp', 'simsp', 'simsp_cpl');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%4 Plot coupled simulations, chopping out no trial times%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%4 Plot coupled simulations, chopping out no movement times%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 load([fn_out '/GLM_coupled_simulation.mat'])
 for idx = 1:nU
     icell = (idx);
@@ -247,6 +270,11 @@ for idx = 1:nU
     gfpillowsimsp_uncoupled = gfpillowsimsp_uncoupled(tidx);
     trialstart = trialstart(tidx);
     trialstart = find(trialstart);
+
+    %Compute coherence of all runs
+    coherence_hyp((fn_out, proc_withheld.spiketrain(:,icell), Rt_glm{idx}(:), runs)
+    %Compute coherence of all runs
+    coherence_hyp((fn_out, proc_withheld.spiketrain(:,icell), uncoupled.Rt_glm{idx}(:), runs)
 
     subplot(2,1,1)
     hold on
@@ -287,7 +315,10 @@ for idx = 1:nU
     save([fn_out '/GLM_sims_cell_' num2str(goodunits(icell)) '_inmovement.mat'], 'truesp', 'simsp', 'simsp_cpl');
 end
 
-%Trial start to trial end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%4 Plot coupled simulations, chopping out no trial times%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames);  
 [proc, proc_withheld] = remove_bad_units(goodunits, proc, proc_withheld);
 

@@ -1,4 +1,8 @@
 function plot_coherence(fn_out, Rt, Rt_glmcpl, Rt_glm, dt)
+    c_glm   = [255 128   0]/255 ;
+    c_glmcpl   = [0 128   255]/255 ;
+
+    fmax = 250;
     NW=12 ; % NW = time-bandwidth product so 12/20s = 0.6 Hz ; this is a soft number!
     params.tapers = [NW NW-1];
     params.Fs = 1/dt ; % sampling frequency (inverse of sampling time)
@@ -23,7 +27,7 @@ function plot_coherence(fn_out, Rt, Rt_glmcpl, Rt_glm, dt)
     params.err=[2 0.02]; % 0.05 confidence interval
     params.trialave = 0; % one trace
     
-    [Coh_glm,phi_glm,~,~,~,freq,confC,~,~] = coherencyc(Rt-mean(Rt),Rt_sta-mean(Rt_glm),params); % other Chronux routines are set up for point processes rather than continuous data, or mixed point and continuous; S12, S1, S2 are cross-power and respective powers for the same NW - but We estimated these for a smaller NW; f is the frequency base
+    [Coh_glm,phi_glm,~,~,~,freq,confC,~,~] = coherencyc(Rt-mean(Rt),Rt_glm-mean(Rt_glm),params); % other Chronux routines are set up for point processes rather than continuous data, or mixed point and continuous; S12, S1, S2 are cross-power and respective powers for the same NW - but We estimated these for a smaller NW; f is the frequency base
     [Coh_glmcpl,phi_glmcpl,~,~,~,~,~,~,~] = coherencyc(Rt-mean(Rt),Rt_glmcpl-mean(Rt_glmcpl),params); % other Chronux routines are set up for point processes rather than continuous data, or mixed point and continuous; S12, S1, S2 are cross-power and respective powers for the same NW - but We estimated these for a smaller NW; f is the frequency base
 
     phi_glm_s = mod(phi_glm,2*pi); 
@@ -52,4 +56,5 @@ function plot_coherence(fn_out, Rt, Rt_glmcpl, Rt_glm, dt)
     subplot(3,1,3);
     plot(freq,(Coh_glm).^2,'Color',c_glm,'LineWidth',1); hold on;
     plot(freq,(Coh_glmcpl).^2,'Color',c_glmcpl,'LineWidth',1);
+    saveplot(gcf, [fn_out], 'eps', [5 8])
 end

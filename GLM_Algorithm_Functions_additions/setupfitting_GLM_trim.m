@@ -11,7 +11,7 @@ function setupfitting_GLM_trim(gg, Stim, maxsize, processed, trim, pcas, offset)
 %  OPRS = structure with optimization params
 %         (ihbas, ihbas2, kxbas, ktbas)
 
-global SPNDS MSP MSTM  MMntrp OPRS
+global SPNDS SPNDS2 MSP MSTM  MMntrp OPRS
 
 setSPNDS(gg);  % set SPNDS and SPNDS2 (integer spike times in time lattice)
 
@@ -89,7 +89,7 @@ end
 
 %Chop out times and spikes that are outside of a trial
 if trim == 1
-    [MSTM, SPNDS] = trimextratrial(MSTM, SPNDS, processed);
+    [MSTM, SPNDS, SPNDS2] = trimextratrial(MSTM, SPNDS, processed, SPNDS2);
     slen = size(MSTM,1);
     rlen = round(slen/OPRS.dt);
 end

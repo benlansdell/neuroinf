@@ -11,7 +11,7 @@ dt = ds*RefreshRate;            %Time scale spike times are resovled at,
 datafile = './mabel_reaching_5-4-10.mat';
 nU = 45;                        %no. units
 nS = 4;                         %no. stim components
-frames = 80;                    %no. stim frames 
+frames = 40;                    %no. stim frames 
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
@@ -19,10 +19,10 @@ nRep = 20;                      %no. sim repetitions
 std = 0;
 [proc, proc_withheld] = preprocess_movementinit(datafile, binsize, dt, frames, std);    
 nB = size(proc.stim, 1);
-fn_out = './results4_gauss_move_5hz_maxit20_5frame/';
+fn_out = './results4_gauss_move_10hz_maxit20_5frame/';
 trim = 1;
 pca = 0;
-Dt = 20;
+Dt = 10;
 maxit = 20;
 dt_glm = 0.1;
 mkdir(fn_out);
@@ -59,11 +59,16 @@ end
 %Save all
 save([fn_out '/all_units.mat'], 'ggs');
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%3 Plot uncoupled filters%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+plot_filters(ggs, proc, [fn_out '/all_units_filters.eps'], goodunits);
+
 %%%%%%%%%%%%%%%%%
 %Simulate models%
 %%%%%%%%%%%%%%%%%
 
-time_limit = 80;
+time_limit = 40;
 units_conv = zeros(nU,1);
 for icell = goodunits
     load([fn_out '/GLM_cell_' num2str(icell) '.mat']);
@@ -81,7 +86,7 @@ for icell = goodunits
     end
     units_conv(icell) = nconverged;
     Rt_glm = Rt_glm'/nRep + 1e-8;
-    logl_glm = mean(Rt.*log(Rt_glm)-(Rt_glm)/RefreshRate) ;
+    logl_glm = mean(Rt.*log(Rt_glm)-(Rt_glm)*dt) ;
     save([fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm', 'nconverged', 'logl_glm');
 end
 
@@ -90,11 +95,6 @@ for i = goodunits
     load([fn_out '/GLM_cell_simulation_' num2str(i) '.mat']);
     logl_glm_uncoupled(i) = logl_glm;
 end    
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-%3 Plot uncoupled filters%
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-plot_filters(ggs, proc, [fn_out '/all_units_filters.eps'], goodunits);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %4 Plot uncoupled simulations%
@@ -220,6 +220,10 @@ end
 %Save all
 save([fn_out '/all_units_network.mat'], 'ggs_cpl');
 
+%Plot
+plot_filters_network_all(ggs_cpl, proc, [fn_out '/all_units_network_filters.eps'], goodunits);
+plot_filters_network_compare(ggs_cpl, ggs, proc, [fn_out '/all_units_network_filters_compare.eps'], goodunits);
+
 load([fn_out '/all_units_network.mat'])
 nU = length(ggs_cpl);
 %Simulate network model...
@@ -258,16 +262,9 @@ for i = 1:nU
         Rt_glm{i} = Rt_glm{i}';
     end
     %Compute log-likelihood:
-    logl_glm(i) = mean(Rt.*log(Rt_glm{i})-(Rt_glm{i})*(1/RefreshRate)) ;
+    logl_glm(i) = mean(Rt.*log(Rt_glm{i})-(Rt_glm{i})*(dt)) ;
 end
 save([fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm', 'logl_glm');
-
-%%%%%%%%%%%%%%%%%%%%%%
-%Plot network filters%
-%%%%%%%%%%%%%%%%%%%%%%
-
-plot_filters_network_all(ggs_cpl, proc, [fn_out '/all_units_network_filters.eps'], goodunits);
-plot_filters_network_compare(ggs_cpl, ggs, proc, [fn_out '/all_units_network_filters_compare.eps'], goodunits);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %4 Plot coupled simulations%
@@ -403,7 +400,6 @@ end
 
 %Save stuff needed to run this chunk of code
 save([fn_out '/preprocessed_networkglm_sims.mat'], 'proc_withheld', 'nU', 'Rt_glm', 'goodunits', 'RefreshRate')
-
 for icell = 1:nU
     truesp = {};
     simsp = {};

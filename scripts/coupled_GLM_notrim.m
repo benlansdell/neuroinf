@@ -18,12 +18,12 @@ frames = 80;                    %no. stim frames
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 83;                      %no. sim repetitions
+nRep = 20;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);
-fn_out = '/results/';
-trim = 1;
+fn_out = '/results_notrim/';
+trim = 0;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
@@ -76,7 +76,7 @@ load([wd fn_out '/all_units_network.mat']);
 
 stim = proc_withheld.stim;
 stim = stim/p;
-stim = stim(:,:);
+stim = stim(1:20000,:);
 time_limit = 2400;
 Tt = size(stim,1);
 Rt_glm = {};
@@ -94,12 +94,9 @@ for ir = 1:nRep
     end
 end
 
-save([wd fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm');
-
-%Compute likelihood
 logl_glm = [];
 for i = 1:nU
-    Rt = proc_withheld.spiketrain(:,i);
+    Rt = proc_withheld.spiketrain(1:20000,i);
     Rt_glm{i} = Rt_glm{i}'/nRep + 1e-8;
     if size(Rt_glm{i},1)==1
         Rt_glm{i} = Rt_glm{i}';
@@ -108,6 +105,7 @@ for i = 1:nU
     logl_glm(i) = mean(Rt.*log(Rt_glm{i})-(Rt_glm{i})*(1/RefreshRate)) ;
 end
 save([wd fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm', 'logl_glm');
+save([wd fn_out '/GLM_coupled_simulation_run3.mat'], 'Rt_glm', 'logl_glm');
 
 %Save stuff needed to run this chunk of code
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize);    

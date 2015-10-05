@@ -18,7 +18,7 @@ frames = 80;                    %no. stim frames
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 20;                      %no. sim repetitions
+nRep = 83;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);
@@ -84,7 +84,7 @@ for i = 1:nU
     Rt_glm{i} = zeros(1,Tt);
     ggs_cpl{i}.ihbas2 = ggs_cpl{i}.ihbas;
 end
-
+rng('shuffle')
 simstruct = makeSimStruct_GLMcpl(ggs_cpl{:});
 for ir = 1:nRep
     ir
@@ -93,6 +93,8 @@ for ir = 1:nRep
         Rt_glm{i}(ceil(iR_glm{i})) = Rt_glm{i}(ceil(iR_glm{i}))+1;
     end
 end
+
+save([wd fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm');
 
 logl_glm = [];
 for i = 1:nU

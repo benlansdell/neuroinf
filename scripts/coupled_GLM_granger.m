@@ -29,7 +29,7 @@ Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
 offset = 1;
-alphalevel = 0.05;
+alphalevel = 0.001;
 mkdir([wd fn_out]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -85,7 +85,7 @@ for icell = 1:nU
         gg0.ih = zeros(size(gg0.ih,1),nC);
         opts = {'display', 'iter', 'maxiter', maxiter};
         [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, offset);
-        grangerstat(icell, jcell) = negloglival - negloglival_all;
+        grangerstat(icell, jcell) = 2*(negloglival - negloglival_all);
     end
 end
 
@@ -94,4 +94,4 @@ dof = size(gg0.ih,1);
 GCpval = 1-chi2cdf(grangerstat, dof);
 GCsig = multiple_sig(GCpval, alphalevel);
 
-save([wd fn_out '/grangerstats.mat'], 'grangerstats', 'GCpval', 'GCsig');
+save([wd fn_out '/grangerstats.mat'], 'grangerstat', 'GCpval', 'GCsig');

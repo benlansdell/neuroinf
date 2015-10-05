@@ -19,7 +19,7 @@ frames = 80;                    %no. stim frames
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 50;                      %no. sim repetitions
+nRep = 20;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);
@@ -75,7 +75,10 @@ for l = 1:length(lambdas)
 end
 %Save all
 save([fn_out '/all_units_network_L1.mat'], 'ggs_cpl', 'lambdas');
-
+rng('shuffle')
+time_limit = 80;
+stim = proc_withheld.stim(1:20000,:);
+stim = stim/p;
 for l = 1:length(lambdas)
     for i = 1:nU
         ggs_cpl{l,i}.ihbas2 = ggs_cpl{l,i}.ihbas;
@@ -96,6 +99,7 @@ for l = 1:length(lambdas)
     end
 end
 
+%Log likelihood for only within trial
 logl_glm = [];
 nB = size(proc_withheld.intrial,1);
 for l = 1:length(lambdas)
@@ -113,14 +117,15 @@ for l = 1:length(lambdas)
     end
 end
 
-logl_glm = [];
+%Log likelihood for all data
+logl_glm_all = [];
 nB = size(proc_withheld.intrial,1);
 for l = 1:length(lambdas)
     for i = 1:nU
         Rt = proc_withheld.spiketrain(1:20000,i);
         %Compute log-likelihood:
-        logl_glm(l,i) = mean(Rt.*log(Rt_glm{l,i})-(Rt_glm{l,i})*(1/RefreshRate)) ;
+        logl_glm_all(l,i) = mean(Rt.*log(Rt_glm{l,i})-(Rt_glm{l,i})*(1/RefreshRate)) ;
     end
 end
 
-save([fn_out '/GLM_coupled_simulation_L!.mat'], 'Rt_glm', 'logl_glm');
+save([fn_out '/GLM_coupled_simulation_L1.mat'], 'Rt_glm', 'logl_glm', 'logl_glm_all');

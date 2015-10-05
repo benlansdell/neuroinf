@@ -1,4 +1,4 @@
-icell = 14;
+icell = 20;
 ttimes = [655.64, 675.64;
 			635.64, 655.64;
 			615.64, 635.64;
@@ -15,6 +15,7 @@ ttimes = [655.64, 675.64;
 			735.64, 755.64;
 			755.64, 775.64;
 			775.64, 795.64];
+clf
 for ii = 1:size(ttimes,1)
 	datafile = 'mabel_reaching_5-4-10';
 	binsize = 0.01;
@@ -42,22 +43,30 @@ for ii = 1:size(ttimes,1)
 	tt = tidx/100;
 	
 	%Plot grip force
-	subplot(3,1,1)
-	plot(tt-tstart, Cursor_X(tidx), tt, Cursor_Y(tidx), tt, Cursor_Z(tidx));
-	xlim([0, tend-tstart])
-	ylabel('cursor position (cm)')
-	%legend('Cursor x', 'y', 'z')
-	subplot(3,1,2)
+	subplot(5,1,1)
+	plot(tt, Cursor_X(tidx));
+	xlim([tstart, tend])
+	ylabel('cursor X (cm)')
+	subplot(5,1,2)
+	plot(tt, Cursor_Y(tidx));
+	xlim([tstart, tend])
+	ylabel('cursor Y (cm)')
+	subplot(5,1,3)
+	plot(tt, Cursor_Z(tidx));
+	xlim([tstart, tend])
+	ylabel('cursor Z (cm)')
+	subplot(5,1,4)
 	hold on
 	h(1) = plot(tt, Grip_force(tidx), 'k');
-	xlim([tstart, tend])
+	xlim([tstart, tend]);
+
 	%h(1) = plot(tt, Cursor_X(tidx), '--', tt, Cursor_Y(tidx), '--', tt, Cursor_Z(tidx), '--');
-	colors = colormap
+	colors = colormap;
 	
 	%Plot Events
 	%Only plots events within range
-	idxstart = find(Events_Data(1,:)>=(tstart*1000), 1)
-	idxend = find(Events_Data(1,:)>=(tend*1000), 1)
+	idxstart = find(Events_Data(1,:)>=(tstart*1000), 1);
+	idxend = find(Events_Data(1,:)>=(tend*1000), 1);
 	evttimes = Events_Data(1,idxstart:idxend)/1000;
 	evts = Events_Data(2,idxstart:idxend);
 	h(2) = plot(evttimes, ones(size(evttimes))*.01, 'x');
@@ -86,7 +95,7 @@ for ii = 1:size(ttimes,1)
 				trialstart = tstart;
 			end
 			%Draw line between here and trialstart
-			h(3) = plot([trialstart, evttime], [-0.01, -0.01], 'r', 'LineWidth', 2);
+			h(3) = plot([trialstart, evttime], [-0.02, -0.02], 'r', 'LineWidth', 2);
 			%line([trialstart, evttime], [-0.01, -0.01], 'LineWidth', 2)
 			intrial = 0;
 		elseif evt == ORIGINAPPEARS;
@@ -97,7 +106,7 @@ for ii = 1:size(ttimes,1)
 				originstart = tstart;
 			end
 			%Draw line between here and trialstart
-			h(4) = plot([originstart, evttime], [-0.03, -0.03], 'b', 'LineWidth', 2);
+			h(4) = plot([originstart, evttime], [-0.06, -0.06], 'b', 'LineWidth', 2);
 			%line([originstart, evttime], [-0.03, -0.03], 'LineWidth', 2)
 			inorigin = 0;
 		elseif evt == TARGETAPPEARS;
@@ -108,7 +117,7 @@ for ii = 1:size(ttimes,1)
 				targetstart = tstart;
 			end
 			%Draw line between here and trialstart
-			h(5) = plot([targetstart, evttime], [-0.05, -0.05], 'g', 'LineWidth', 2);
+			h(5) = plot([targetstart, evttime], [-0.1, -0.1], 'g', 'LineWidth', 2);
 			%line([targetstart, evttime], [-0.05, -0.05], 'LineWidth', 2)
 			intarget = 0;
 		elseif evt == GOSIGNAL;
@@ -119,7 +128,7 @@ for ii = 1:size(ttimes,1)
 				gostart = tstart;
 			end
 			%Draw line between here and trialstart
-			h(6) = plot([gostart, evttime], [-0.07, -0.07], 'k', 'LineWidth', 2);
+			h(6) = plot([gostart, evttime], [-0.14, -0.14], 'k', 'LineWidth', 2);
 			%line([gostart, evttime], [-0.07, -0.07], 'LineWidth', 2)
 			ingo = 0;
 		elseif evt == GRIPPRESSED;
@@ -130,7 +139,7 @@ for ii = 1:size(ttimes,1)
 				gripstart = tstart;
 			end
 			%Draw line between here and trialstart
-			h(7) = plot([gripstart, evttime], [-0.09, -0.09], 'y', 'LineWidth', 2);
+			h(7) = plot([gripstart, evttime], [-0.18, -0.18], 'y', 'LineWidth', 2);
 			%line([gripstart, evttime], [-0.09, -0.09], 'LineWidth', 2)
 			ingrip = 0;
 		end
@@ -138,29 +147,29 @@ for ii = 1:size(ttimes,1)
 	
 	%Close off any events unfinished:
 	if intrial
-		h(8) = plot([trialstart, tend], [-0.01, -0.01], 'r', 'LineWidth', 2);
+		h(8) = plot([trialstart, tend], [-0.02, -0.02], 'r', 'LineWidth', 2);
 		%line([trialstart, tend], [-0.01, -0.01], 'LineWidth', 2)
 	end
 	if inorigin
-		h(9) = plot([originstart, tend], [-0.03, -0.03], 'b', 'LineWidth', 2);
+		h(9) = plot([originstart, tend], [-0.06, -0.06], 'b', 'LineWidth', 2);
 		%line([originstart, tend], [-0.03, -0.03], 'LineWidth', 2)
 	end
 	if intarget
-		h(10) = plot([targetstart, tend], [-0.05, -0.05], 'g', 'LineWidth', 2);
+		h(10) = plot([targetstart, tend], [-0.1, -0.1], 'g', 'LineWidth', 2);
 		%line([targetstart, tend], [-0.05, -0.05], 'LineWidth', 2)
 	end
 	if ingo
-		h(11) = plot([gostart, tend], [-0.07, -0.07], 'k', 'LineWidth', 2);
+		h(11) = plot([gostart, tend], [-0.14, -0.14], 'k', 'LineWidth', 2);
 		%line([gostart, tend], [-0.07, -0.07], 'LineWidth', 2)
 	end
 	if ingrip
-		h(12) = plot([gripstart, tend], [-0.09, -0.09], 'y', 'LineWidth', 2);
+		h(12) = plot([gripstart, tend], [-0.18, -0.18], 'y', 'LineWidth', 2);
 		%line([gripstart, tend], [-0.09, -0.09], 'LineWidth', 2)
 	end
 	ylabel('grip force')
-	hl = legend([h([1 3:7])], 'Grip force', 'Within trial', 'Origin seek', 'Target seek', 'Go signal', 'Grip pressed')
+	hl = legend([h([1 3:7])], 'Grip force', 'Within trial', 'Origin seek', 'Target seek', 'Go signal', 'Grip pressed');
 	
-	subplot(3,1,3)
+	subplot(5,1,5)
 	%Smooth spikes
 	RefreshRate = 100;
 	sigma_fr = .1;
@@ -171,74 +180,55 @@ for ii = 1:size(ttimes,1)
 	gaussFilter_fr = gaussFilter_fr/sum(gaussFilter_fr);
 	gftruesp = conv(spikes, gaussFilter_fr, 'same');
 	
-	%Plot spikes of a 'good' unit
-	plot(tt-tstart, gftruesp(tidx)*RefreshRate);
-	xlim([0, tend-tstart])
+	%Plot spikes
+	plot(tt, gftruesp(tidx)*RefreshRate);
+	xlim([tstart, tend])
 	xlabel('time (s)')
 	ylabel('spikes/s')
-	ylim([0 100])
-	saveplot(gcf, ['./trialsample_cell_' num2str(icell) '_' num2str(ii) '.eps'], 'eps', [10 6])
+	ylim([0 50])
+
+	%Add ticks for spikes:
+	hold on 
+	truesp = processed.spikes{icell}*binsize;
+	truesp = truesp(truesp < tend & truesp > tstart);
+	for idx = 1:length(truesp)
+		plot([truesp(idx) truesp(idx)], [0 5], 'k')
+	end
+	saveplot(gcf, ['./trialsample_cell_' num2str(icell) '_' num2str(ii) '.eps'], 'eps', [10 10])
 end
+
 %Plot autocorrelation too...
 %Plot a bunch of preprocessing diagnostics
 figure
 %Compute auto- and cross-correlation in torque and example firing rate
 samplerate = 100;
 binsize = 1/samplerate;
-maxlag = 90;
-autotorqueX = xcov(Cursor_X(:),samplerate*maxlag);%, 'coeff');
-autotorqueY = xcov(Cursor_Y(:),samplerate*maxlag);%, 'coeff');
-autotorqueZ = xcov(Cursor_Z(:),samplerate*maxlag);%, 'coeff');
-autotorqueGrip = xcov(Grip_force(:),samplerate*maxlag);%, 'coeff');
+maxlag = 50;
+%autotorqueX = xcov(Cursor_X(:)-mean(Cursor_X(:)),samplerate*maxlag);%, 'coeff');
+%autotorqueY = xcov(Cursor_Y(:)-mean(Cursor_Y(:)),samplerate*maxlag);%, 'coeff');
+%autotorqueZ = xcov(Cursor_Z(:)-mean(Cursor_Z(:)),samplerate*maxlag);%, 'coeff');
+%autotorqueGrip = xcov(Grip_force(:)-mean(Grip_force(:)),samplerate*maxlag);%, 'coeff');
+
+autotorqueX = xcov(Cursor_X(:)-mean(Cursor_X(:)),samplerate*maxlag);%, 'coeff');
+autotorqueY = xcov(Cursor_Y(:)-mean(Cursor_Y(:)),samplerate*maxlag);%, 'coeff');
+autotorqueZ = xcov(Cursor_Z(:)-mean(Cursor_Z(:)),samplerate*maxlag);%, 'coeff');
+autotorqueGrip = xcov(Grip_force(:)-mean(Grip_force(:)),samplerate*maxlag);%, 'coeff');
+
 tt = -maxlag:binsize:maxlag;
 subplot(2,2,1)
-plot(tt, autotorqueX/max(autotorqueX));
+plot(tt, autotorqueX/autotorqueX(5001));
 title('Cursor X');		
+xlabel('sec')
 subplot(2,2,2)
-plot(tt, autotorqueY/max(autotorqueX))
+plot(tt, autotorqueY/autotorqueY(5001));
 title('Cursor Y');
+xlabel('sec')
 subplot(2,2,3)
-plot(tt, autotorqueZ/max(autotorqueX));
+plot(tt, autotorqueZ/autotorqueZ(5001));
 title('Cursor Z')
+xlabel('sec')
 subplot(2,2,4)
-plot(tt, autotorqueGrip);
+plot(tt, autotorqueGrip/autotorqueGrip(5001));
 title('Grip force');		
-saveplot(gcf, ['stim_autocorrelations.eps'], 'eps', [6 6]);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Double check processed structure labels in trial times correctly%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-datafile = './data/mabel_reaching_5-4-10.mat';
-nU = 45;
-binsize = 1/100;
-samplerate = 1/binsize;
-nK_sp = 40;
-nK_stm = 6;
-a = 10;
-dt_sp = binsize;
-dt_stm = 100/1000;
-const = 'on';
-percentage = 80;
-models = {};
-nRep = 20;
-fn_out = './monkeyresults/run_glm_fitting_sp_100Hz_fwdrev_trim_80pt.eps';
-processed = preprocess_monkey(datafile, binsize, 1);
-nB = size(processed.cursor,1);
-
-istart = 1;
-iend = 5000;
-ii = istart:iend;
-tt = (ii)*binsize;
-
-figure 
-clf
-intrial = processed.intrial(ii)==1;
-plot(tt, processed.grip(ii), '--')%, tt, processed.cursor(ii, 1), tt, processed.cursor(ii, 2), tt, processed.cursor(ii, 3));
-hold on
-%plot(tt(intrial), processed.grip(intrial), '.', tt(intrial), processed.cursor(intrial, 1), '.',...
-% tt(intrial), processed.cursor(intrial, 2), '.', tt(intrial), processed.cursor(intrial, 3), '.')
-
-plot(tt(intrial), processed.grip(intrial), 'r.')
-saveplot(gcf, ['trialstrimmed.eps'])
-%Compare to images made above... seems to check out
+xlabel('sec')
+saveplot(gcf, ['stim_autocorrelations.eps'], 'eps', [6 10]);

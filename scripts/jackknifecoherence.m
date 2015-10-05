@@ -1,6 +1,6 @@
 function jackknifecoherence 
 	%Set wd to working directory
-	wd = './results_coupled_glm';
+	wd = './results_intermed/';
 	%wd = '/Users/dk/Dropbox/AFK_Neuron/Code_GLM_ben/monkeyresults/coherence_networkglm/';
 	load([wd '/preprocessed_networkglm_sims.mat'])
 	
@@ -12,8 +12,7 @@ function jackknifecoherence
 	coh_SE_05 = zeros(nU,1);
 	coh_SE_cpl_05 = zeros(nU,1);
 
-	maxt = 20000;
-
+	%maxt = 20000;
 	for icell = 1:nU
 	    truesp = {};
 	    simsp = {};
@@ -21,14 +20,14 @@ function jackknifecoherence
 	    runs = size(proc_withheld.trialstartend,1);
 	    K = [];
 	    N_sample_max = 0;
-	    uncoupled = load(['./results_uncoupled_GLM/GLM_cell_simulation_' num2str(goodunits(icell)) '.mat']);
+	    uncoupled = load(['./results/GLM_cell_simulation_' num2str(goodunits(icell)) '.mat']);
 	    nspks = 0;
 	    for i = 1:runs
 	        ts = proc_withheld.trialstartend(i, 1);
 	        te = proc_withheld.trialstartend(i, 2);
-	        if ts > maxt | te > maxt
-	        	break
-	        end
+	        %if ts > maxt | te > maxt
+	        %	break
+	        %end
 	        truesp{i} = proc_withheld.spiketrain(:,goodunits(icell));
 	        truesp{i} = truesp{i}(ts:te);
 	        simsp_cpl{i} = Rt_glm{icell}(:);
@@ -80,6 +79,11 @@ function jackknifecoherence
 	    ii = 1:fix(Pad/L);
 	    ii_s = 6;
 
+	    coh1hz_cpl = abs(Coh_cpl);
+	    coh1hz = abs(Coh);
+	    meancoh1hz_cpl(icell) = mean(coh1hz_cpl(2:11));
+	    meancoh1hz(icell) = mean(coh1hz(2:11));
+
 		coh_05(icell) = Coh(ii_s);
 		coh_cpl_05(icell) = Coh_cpl(ii_s);
 		coh_SE_05(icell) = Coh_SE(ii_s);
@@ -111,15 +115,27 @@ function jackknifecoherence
 
 	%Plot scatter plot:
 	clf
-	xlabel('Coherence b/w true spikes and uncoupled GLM')
-	ylabel('Coherence b/w true spikes and coupled GLM')
 	xlim([0 1])
 	ylim([0 1])
 	plot([0 1], [0 1], 'k')
 	hold on
 	errorbar(coh_05, coh_cpl_05, coh_SE_cpl_05, '.')
 	herrorbar(coh_05, coh_cpl_05, coh_SE_05, '.')
+	xlabel('Coherence b/w true spikes and uncoupled GLM')
+	ylabel('Coherence b/w true spikes and coupled GLM')
 	saveplot(gcf, [wd '/GLM_coherence_scatter.eps'])
+
+	%Plot scatter plot mean zero to one Hz coherence:
+	clf
+	xlim([0 1])
+	ylim([0 1])
+	plot([0 1], [0 1], 'k')
+	hold on
+	scatter(meancoh1hz, meancoh1hz_cpl)
+	xlabel('Mean (0-1hz) Coherence b/w true spikes and uncoupled GLM')
+	ylabel('Mean (0-1hz) Coherence b/w true spikes and coupled GLM')
+	saveplot(gcf, [wd '/GLM_coherence_scatter_mean1hz.eps'])
+
 end
 
 function [Coh_all, Coh_SE] = jackknife_coh(Coh)

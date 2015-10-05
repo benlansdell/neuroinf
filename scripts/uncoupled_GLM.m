@@ -18,7 +18,7 @@ frames = 80;                    %no. stim frames
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 100;                      %no. sim repetitions
+nRep = 32;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize);    
 nB = size(proc.stim, 1);
@@ -70,7 +70,7 @@ save([wd fn_out '/all_units.mat'], 'ggs');
 time_limit = 80;
 units_conv = zeros(nU,1);
 logl_glm_uncoupled = [];
-
+rng('shuffle')
 for icell = goodunits
     load([wd fn_out '/GLM_cell_' num2str(icell) '.mat']);
     %Simulation with test stim

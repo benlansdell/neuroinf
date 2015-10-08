@@ -18,37 +18,44 @@ frames = 80;                    %no. stim frames
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 20;                      %no. sim repetitions
+nRep = 747;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);
-fn_out = '/results_intermed/';
+fn_out = '/results_intermed747/';
 trim = 0;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
 mkdir([wd fn_out]);
 
-%Load local data:
-r0 = load([wd fn_out '/GLM_coupled_simulation.mat']);
 %Load data from the other runs and add it to Rt_glm...
-r1 = load([wd fn_out '/GLM_coupled_simulation_run1.mat']);
-r2 = load([wd fn_out '/GLM_coupled_simulation_run2.mat']);
-r3 = load([wd fn_out '/GLM_coupled_simulation_run3.mat']);
-r4 = load([wd fn_out '/GLM_coupled_simulation_run4.mat']);
+r1 = load([wd fn_out '/GLM_coupled_simulation1.mat']);
+r2 = load([wd fn_out '/GLM_coupled_simulation2.mat']);
+r3 = load([wd fn_out '/GLM_coupled_simulation3.mat']);
+r4 = load([wd fn_out '/GLM_coupled_simulation4.mat']);
+r5 = load([wd fn_out '/GLM_coupled_simulation5.mat']);
+r6 = load([wd fn_out '/GLM_coupled_simulation6.mat']);
+r7 = load([wd fn_out '/GLM_coupled_simulation7.mat']);
+r8 = load([wd fn_out '/GLM_coupled_simulation8.mat']);
+r9 = load([wd fn_out '/GLM_coupled_simulation9.mat']);
 
 nU = 9;
 %Check if Rt_glm needs normalizing
-Rt_glm = r0.Rt_glm;
+Rt_glm = {};
 for idx = 1:nU
-	Rt_glm{idx} = Rt_glm{idx}*20;
-	Rt_glm{idx} = Rt_glm{idx}+r1.Rt_glm{idx}';
-	Rt_glm{idx} = Rt_glm{idx}+r2.Rt_glm{idx}';
-	Rt_glm{idx} = Rt_glm{idx}+r3.Rt_glm{idx}';
-	Rt_glm{idx} = Rt_glm{idx}+r4.Rt_glm{idx}';
-end 
+	Rt_glm{idx} = r1.Rt_glm{idx};
+	Rt_glm{idx} = Rt_glm{idx}+r2.Rt_glm{idx};
+	Rt_glm{idx} = Rt_glm{idx}+r3.Rt_glm{idx};
+	Rt_glm{idx} = Rt_glm{idx}+r4.Rt_glm{idx};
+	Rt_glm{idx} = Rt_glm{idx}+r5.Rt_glm{idx};
+    Rt_glm{idx} = Rt_glm{idx}+r6.Rt_glm{idx};
+    Rt_glm{idx} = Rt_glm{idx}+r7.Rt_glm{idx};
+    Rt_glm{idx} = Rt_glm{idx}+r8.Rt_glm{idx};
+    Rt_glm{idx} = Rt_glm{idx}+r9.Rt_glm{idx};
+end
 
-nRep = 20+12;
+nRep = 747;
 
 logl_glm = [];
 for i = 1:nU

@@ -5,7 +5,7 @@ wd = '.';
 %1 Preprocess data%
 %%%%%%%%%%%%%%%%%%%
 
-goodunits = [4,14,15,36,41];
+goodunits = [4,7,14,15,17,20,24,36,41];
 
 global RefreshRate;
 RefreshRate = 100;              %Stimulus refresh rate
@@ -19,7 +19,7 @@ frames = 80;                    %no. stim frames
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 20;                      %no. sim repetitions
+nRep = 150;                     %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);

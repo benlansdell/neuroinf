@@ -1,6 +1,6 @@
 function jackknifecoherence 
 	%Set wd to working directory
-	wd = './results_intermed/';
+	wd = './results_intermed747/';
 	%wd = '/Users/dk/Dropbox/AFK_Neuron/Code_GLM_ben/monkeyresults/coherence_networkglm/';
 	load([wd '/preprocessed_networkglm_sims.mat'])
 	

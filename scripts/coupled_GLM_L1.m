@@ -5,7 +5,7 @@ wd = '.';
 %1 Preprocess data%
 %%%%%%%%%%%%%%%%%%%
 
-goodunits = [4,7,14,15,17,20,24,36,41];
+goodunits = [4,7,14,15,17];
 
 global RefreshRate;
 RefreshRate = 100;              %Stimulus refresh rate
@@ -23,13 +23,14 @@ nRep = 150;                     %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);
-fn_out = './results/';
+fn_out = './resultsL1test/';
 trim = 1;
 Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
 offset = 1;
 mkdir([wd fn_out]);
+method = 'opg';
 
 %%%%%%%%%%%%%%%%%%%%%%
 %Fit L1 network model%
@@ -67,14 +68,14 @@ for l = 1:length(lambdas)
         %Add terms for other spike filters
         gg0.ih = zeros(size(gg0.ih,1),nU);
         opts = {'display', 'iter', 'maxiter', maxiter};
-        [gg, negloglival] = MLfit_GLM_trim_L1(gg0,stim,opts,proc,trim, offset, lambda);
+        [gg, negloglival] = MLfit_GLM_trim_L1(gg0,stim,opts,proc,trim, offset, lambda, method);
         ggs_cpl{l,icell} = gg;
-        save([fn_out '/GLM_coupled_cell_' num2str(icell) '_lambda_' num2str(lambda) '.mat'],...
+        save([fn_out '/GLM_coupled_method_ ' method '_cell_' num2str(icell) '_lambda_' num2str(lambda) '.mat'],...
             'gg'); %, 'Rt_glm');
     end
 end
 %Save all
-save([fn_out '/all_units_network_L1.mat'], 'ggs_cpl', 'lambdas');
+save([fn_out '/all_units_network_L1_method_ ' method '.mat'], 'ggs_cpl', 'lambdas');
 rng('shuffle')
 time_limit = 80;
 stim = proc_withheld.stim(1:20000,:);
@@ -128,4 +129,4 @@ for l = 1:length(lambdas)
     end
 end
 
-save([fn_out '/GLM_coupled_simulation_L1.mat'], 'Rt_glm', 'logl_glm', 'logl_glm_all');
+save([fn_out '/GLM_coupled_simulation_L1_method_' method '.mat'], 'Rt_glm', 'logl_glm', 'logl_glm_all');

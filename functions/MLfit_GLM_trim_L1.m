@@ -1,4 +1,4 @@
-function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed, trim, offset, lambda);
+function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed, trim, offset, lambda, method);
 %  [ggnew,fval,H] = MLfit_GLM(gg,Stim,optimArgs);
 % 
 %  Computes the ML estimate for GLM params, using grad and hessians.
@@ -18,6 +18,7 @@ function [gg, fval,H] = MLfit_GLM_trim(gg,Stim,optimArgs,processed, trim, offset
 MAXSIZE  = 1e7;  % Maximum amount to be held in memory at once;
 if (nargin < 6) offset = 1; end
 if (nargin < 7) lambda = 1; end
+if (nargin < 8) method = 'spg'; end
 
 % Set optimization parameters 
 if nargin > 2
@@ -49,7 +50,15 @@ for idx = 1:nG
 	groups(indices) = idx; 
 end
 lambdaVect = lambda*ones(nG, 1);	
-w = L1GeneralGroup_Auxiliary(@Loss_GLM_logli,prs,lambdaVect,groups,options);
+
+options.method = method;
+if ismember(method, {'spg', 'opg', 'pqn'})
+	w = L1GeneralGroup_Auxiliary(@Loss_GLM_logli,prs,lambdaVect,groups,options);
+elseif ismember(method, {'bbst', 'qnst'})
+	w = L1GeneralGroup_SoftThresh(@Loss_GLM_logli,prs,lambdaVect,groups,options);
+else
+	error('Invalid L1 optimizationn method. Please see help.')
+end
 
 % Put returned vals back into param structure ------
 gg = reinsertFitPrs_GLM(gg,w);

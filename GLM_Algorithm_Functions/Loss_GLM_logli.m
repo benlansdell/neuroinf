@@ -1,4 +1,4 @@
-function [logli, dL, H] = Loss_GLM_logli(prs)
+function [logli, dL, H] = Loss_GLM_logli(prs, ggmask)
 % [neglogli, dL, H] = Loss_GLM_logli(prs)
 %
 % Compute negative log-likelihood of data undr the GLM model
@@ -18,6 +18,8 @@ function [logli, dL, H] = Loss_GLM_logli(prs)
 
 etol = 1e-100;
 
+if (nargin < 2) ggmask = []; end
+
 % global vars for optimization
 global MSTM MMntrp SPNDS SPNDS2 OPRS RefreshRate 
 
@@ -34,10 +36,27 @@ nhtot = nh+nh2*nCoupled;
 dt = OPRS.dt; ndt = round(1/dt);
 slen = size(MSTM,1); rlen = slen*ndt;
 
+if isempty(ggmask) ggmask = ones(nCoupled,1); end
+
 % Unpack GLM prs;
 kprs = prs(1:nktot);
 dc = prs(nktot+1);
 ihprs = prs(nktot+2:end);
+
+%Mask out some of the coupling terms
+mask = ones(nh2, nCoupled);
+for idx = 1:nCoupled
+    mask(:,idx) = ggmask(idx);
+end
+mask = reshape(mask, nh2*nCoupled, []);
+mask = [ones(nh, 1); mask];
+
+%Exclude masked parameters from computation of likelihood
+ihprs = ihprs.*mask;
+
+%Set gradient and Hessian terms of masked variables to zero with this index
+mask = [ones(nktot+1, 1); mask];
+
 
 % Initialize likelihood, gradient and Hessian -----------
 logli = 0;
@@ -123,6 +142,8 @@ for jch = 1:OPRS.nchunks
         end
         dL = dL + [dLdk; dLdb; dLdh];
 
+        %Mask variables
+        dL(mask==0) = 0;
     end
 
     % ---------  Compute Hessian -----------------
@@ -173,6 +194,9 @@ for jch = 1:OPRS.nchunks
             end
         end
         H = H + [[Hk Hkb Hkh]; [Hkb' Hb Hhb']; [Hkh' Hhb Hh]];
+        %mask variables
+        H(mask==0,:) = 0;
+        H(:,mask==0) = 0;    
     end
-    
 end
+

@@ -20,6 +20,8 @@ if (nargin < 6) offset = 1; end
 if (nargin < 7) lambda = 1; end
 if (nargin < 8) method = 'spg'; end
 
+thresh = 1e-5;
+
 % Set optimization parameters 
 if nargin > 2
     opts = optimset('Gradobj','on','Hessian','on', optimArgs{:});
@@ -31,15 +33,15 @@ end
 prs0 = extractFitPrs_GLM_trim(gg,Stim,MAXSIZE,processed, trim, offset);
 
 % minimize negative log likelihood. The warm-up solution for L1 reg
-[prs,fval] = fminunc(@Loss_GLM_logli,prs0,opts);
-if nargout > 2 % Compute Hessian if desired
-    [fv,gradval,H] = Loss_GLM_logli(prs);
-end
+[prs,fval] = fminunc(@(p) Loss_GLM_logli(p),prs0,opts);
 
 groups = zeros(size(prs));
 nG = size(gg.tsp2,2);
 nP = size(gg.ihbas2,2);
-gOptions.maxIter = 2000;
+
+%gOptions.maxIter = 1000;
+%lambda = 30;
+gOptions.maxIter = 500;
 gOptions.verbose = 2; % Set to 0 to turn off output
 gOptions.corrections = 10; % Number of corrections to store for L-BFGS methods
 gOptions.norm = 2; % Set to inf to use infinity norm
@@ -63,8 +65,17 @@ end
 % Put returned vals back into param structure ------
 gg = reinsertFitPrs_GLM(gg,w);
 
-%----------------------------------------------------
-% % ------ Check analytic gradients, Hessians -------
-% HessCheck(@Loss_GLM_logli,prs0,opts);
-% HessCheck_Elts(@Loss_GLM_logli, [1 12],prs0,opts);
-% tic; [lival,J,H]=Loss_GLM_logli(prs0); toc;
+%Check which coupling terms are zero and mask these ones out, then redo the fitting with just MLE
+%Anything less than 10^-5 counts as zero
+gg.mask = any(abs(gg.ih2) > thresh,1);
+
+% Set initial params
+prs1 = extractFitPrs_GLM_trim(gg,Stim,MAXSIZE,processed, trim, offset);
+[prs,fval] = fminunc(@(p) Loss_GLM_logli(p, gg.mask), prs1, opts);
+
+if nargout > 2 % Compute Hessian if desired
+    [fv,gradval,H] = Loss_GLM_logli(prs);
+end
+
+% Put returned vals back into param structure ------
+gg = reinsertFitPrs_GLM(gg,prs);

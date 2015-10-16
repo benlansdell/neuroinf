@@ -18,7 +18,7 @@ frames = 80;                    %no. stim frames
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 32;                      %no. sim repetitions
+nRep = 747;                      %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize);    
 nB = size(proc.stim, 1);
@@ -61,7 +61,7 @@ end
 
 %Save all
 save([wd fn_out '/all_units.mat'], 'ggs');
-%load([wd fn_out '/all_units.mat']);
+load([wd fn_out '/all_units.mat']);
 
 %%%%%%%%%%%%%%%%%%%
 %3 Simulate models%
@@ -76,10 +76,10 @@ for icell = goodunits
     %Simulation with test stim
     disp(num2str(icell));
     %Only within trial times...
-    Rt = proc_withheld.spiketrain(1:20000,icell);
-    stim = proc_withheld.stim(1:20000,:);
+    Rt = proc_withheld.spiketrain(:,icell);
+    stim = proc_withheld.stim(:,:);
     stim = stim/p;
-    stim = stim(1:20000,:);
+    stim = stim(:,:);
     Tt = size(stim,1);
     Rt_glm = zeros(1,Tt);
     nconverged = 0;

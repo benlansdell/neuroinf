@@ -87,7 +87,7 @@ save([fn_out '/all_units_network_L1_method_ ' method '.mat'], 'ggs_cpl', 'lambda
 %        stim = proc.stim;
 %        stim = stim/p;
 %        resp = proc.spikes{icell};
-%        nicell = [(1:icell-1), (icell+1:nU)];
+%        nicell = [(l1:icell-1), (icell+1:nU)];
 %        %Add coupling to the other spike trains
 %        coupled = proc.spikes(nicell);
 %        for idx = 1:length(coupled)
@@ -109,10 +109,14 @@ save([fn_out '/all_units_network_L1_method_ ' method '.mat'], 'ggs_cpl', 'lambda
 %save([wd fn_out '/all_units_network_L1_refit.mat'], 'ggs_cpl', 'lambdas');
 
 %Plot the filters
+load([fn_out '/all_units_network_L1_method_ ' method '.mat']);
+uncoupled = load(['./results/all_units.mat']);
 for l = 1:length(lambdas)
     lambda = lambdas(l);
     plot_filters_network_all(ggs_cpl(l,:), proc,...
      [wd fn_out '/GLM_coupled_method_ ' method '_lambda_' num2str(lambda) '.eps'], goodunits);
+    plot_filters_network_compare(ggs_cpl(l,:), uncoupled.ggs, proc,...
+     [wd fn_out '/GLM_coupled_compare_method_ ' method '_lambda_' num2str(lambda) '.eps'], goodunits);
 end
 
 rng('shuffle')

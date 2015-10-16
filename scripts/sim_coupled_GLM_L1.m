@@ -1,7 +1,4 @@
 function sim_coupled_GLM_L1(id, nRep, l)
-
-
-
     %Set to working directory
     wd = './';
     
@@ -10,7 +7,6 @@ function sim_coupled_GLM_L1(id, nRep, l)
     %%%%%%%%%%%%%%%%%%%
     
     goodunits = [4,7,14,15,17,20,24,36,41];
-    
     global RefreshRate;
     RefreshRate = 100;              %Stimulus refresh rate
     ds = 0.001;                     %Spike time resolution

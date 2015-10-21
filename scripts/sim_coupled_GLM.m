@@ -1,13 +1,8 @@
-function sim_coupled_GLM_L1(id, nRep, l, maxBins)
+function sim_coupled_GLM(id, nRep)
     nRep = str2num(nRep);
-    l = str2num(l);
     %Set to working directory
     wd = './';
- 
-    if nargin < 4
-        maxBins = 1e20;
-    end    
-
+    
     %%%%%%%%%%%%%%%%%%%
     %1 Preprocess data%
     %%%%%%%%%%%%%%%%%%%
@@ -28,8 +23,8 @@ function sim_coupled_GLM_L1(id, nRep, l, maxBins)
     standardize = 0;
     %nRep = 249;
     [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
-    nB = min(maxBins, size(proc.stim, 1));
-    fn_out = 'results_L1/';
+    nB = size(proc.stim, 1);
+    fn_out = 'results/';
     trim = 1;
     Dt = 20;
     maxit = 20;
@@ -39,28 +34,28 @@ function sim_coupled_GLM_L1(id, nRep, l, maxBins)
     method = 'spg';
     
     %Load fits (ggs_cpl, lambdas)
-    load([fn_out '/all_units_network_L1_method_' method '.mat']);
+    load([fn_out '/all_units_network.mat']);
     rng('shuffle')
     time_limit = 2400;
-    stim = proc_withheld.stim(1:nB,:);
+    stim = proc_withheld.stim(:,:);
     stim = stim/p;
     
     for i = 1:nU
-        ggs_cpl{l,i}.ihbas2 = ggs_cpl{l,i}.ihbas;
+        ggs_cpl{i}.ihbas2 = ggs_cpl{i}.ihbas;
     end
-    simstruct = makeSimStruct_GLMcpl(ggs_cpl{l,:});
+    simstruct = makeSimStruct_GLMcpl(ggs_cpl{:});
     %Simulation with test stim
     %disp(num2str(icell));
     Tt = size(stim,1);
     for i = 1:nU
-        Rt_glm{l,i} = zeros(nRep,Tt);
+        Rt_glm{i} = zeros(nRep,Tt);
     end
     for ir = 1:nRep
         ir
         [iR_glm,vmem,Ispk] = simGLM_monkey(simstruct, stim, time_limit);
         for i = 1:nU
-            Rt_glm{l,i}(ir, ceil(iR_glm{i})) = Rt_glm{l,i}(ir, ceil(iR_glm{i}))+1;
+            Rt_glm{i}(ir, ceil(iR_glm{i})) = Rt_glm{i}(ir, ceil(iR_glm{i}))+1;
         end
-        save([wd fn_out '/GLM_coupled_simulation_L1_method_' method '_lambda_' num2str(lambdas(l)) '_ID_' id '.mat'], 'Rt_glm', 'nRep', 'ir');
+        save([wd fn_out '/GLM_coupled_simulation_ID_' id '.mat'], 'Rt_glm', 'nRep', 'ir');
     end
 end

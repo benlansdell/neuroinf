@@ -1,12 +1,12 @@
-function sim_coupled_GLM_L1(id, nRep, l, maxBins)
+function sim_coupled_GLM_L1_MLE(id, nRep, l, maxBins)
     nRep = str2num(nRep);
     l = str2num(l);
     %Set to working directory
     wd = './';
- 
+
     if nargin < 4
         maxBins = 1e20;
-    end    
+    end
 
     %%%%%%%%%%%%%%%%%%%
     %1 Preprocess data%
@@ -28,8 +28,8 @@ function sim_coupled_GLM_L1(id, nRep, l, maxBins)
     standardize = 0;
     %nRep = 249;
     [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
-    nB = min(maxBins, size(proc.stim, 1));
-    fn_out = 'results_L1/';
+    nB = min(size(proc.stim, 1), maxBins);
+    fn_out = 'results_L1_MLE/';
     trim = 1;
     Dt = 20;
     maxit = 20;

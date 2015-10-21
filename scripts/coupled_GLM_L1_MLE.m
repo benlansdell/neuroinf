@@ -23,10 +23,10 @@ nRep = 747;                     %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);
-fn_out = 'results_L1/';
+fn_out = 'results_L1_MLE/';
 trim = 1;
 Dt = 20;
-maxit = 20;
+maxit = 10;
 dt_glm = 0.1;
 offset = 1;
 mkdir([wd fn_out]);
@@ -68,7 +68,7 @@ for l = 1:length(lambdas)
         %Add terms for other spike filters
         gg0.ih = zeros(size(gg0.ih,1),nU);
         opts = {'display', 'iter', 'maxiter', maxiter};
-        [gg, negloglival] = MLfit_GLM_trim_L1(gg0,stim,opts,proc,trim, offset, lambda, method);
+        [gg, negloglival] = MLfit_GLM_trim_L1_MLE(gg0,stim,opts,proc,trim, offset, lambda, method);
         ggs_cpl{l,icell} = gg;
         save([wd fn_out '/GLM_coupled_method_ ' method '_cell_' num2str(icell) '_lambda_' num2str(lambda) '.mat'],...
             'gg'); %, 'Rt_glm');

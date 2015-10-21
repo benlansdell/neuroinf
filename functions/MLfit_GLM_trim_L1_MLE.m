@@ -65,6 +65,18 @@ end
 % Put returned vals back into param structure ------
 gg = reinsertFitPrs_GLM(gg,w);
 
+%Check which coupling terms are zero and mask these ones out, then redo the fitting with just MLE
+%Anything less than 10^-5 counts as zero
+gg.mask = any(abs(gg.ih2) > thresh,1);
+
+% Set initial params
+prs1 = extractFitPrs_GLM_trim(gg,Stim,MAXSIZE,processed, trim, offset);
+[prs,fval] = fminunc(@(p) Loss_GLM_logli(p, gg.mask), prs1, opts);
+%[prs,fval] = fminunc(@(p) Loss_GLM_logli_norefitstim(p, gg.mask), prs1, opts);
+
 if nargout > 2 % Compute Hessian if desired
-    [fv,gradval,H] = Loss_GLM_logli(w);
+    [fv,gradval,H] = Loss_GLM_logli(prs);
 end
+
+% Put returned vals back into param structure ------
+gg = reinsertFitPrs_GLM(gg,prs);

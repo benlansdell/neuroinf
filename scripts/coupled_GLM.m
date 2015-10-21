@@ -18,7 +18,7 @@ frames = 80;                    %no. stim frames
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 83;                      %no. sim repetitions
+nRep = 747;                     %no. sim repetitions
 standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
 nB = size(proc.stim, 1);
@@ -63,7 +63,6 @@ for icell = 1:nU
     opts = {'display', 'iter', 'maxiter', maxiter};
     [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim);
     ggs_cpl{icell} = gg;
-    save([wd fn_out '/GLM_coupled_cell_' num2str(icell) '.mat'], 'gg');
 end
 
 %Save all
@@ -81,7 +80,7 @@ time_limit = 2400;
 Tt = size(stim,1);
 Rt_glm = {};
 for i = 1:nU
-    Rt_glm{i} = zeros(1,Tt);
+    Rt_glm{i} = zeros(nRep,Tt);
     ggs_cpl{i}.ihbas2 = ggs_cpl{i}.ihbas;
 end
 rng('shuffle')
@@ -90,31 +89,38 @@ for ir = 1:nRep
     ir
     [iR_glm,vmem,Ispk] = simGLM_monkey(simstruct, stim, time_limit);
     for i = 1:nU
-        Rt_glm{i}(ceil(iR_glm{i})) = Rt_glm{i}(ceil(iR_glm{i}))+1;
+        Rt_glm{i}(ir, ceil(iR_glm{i})) = Rt_glm{i}(ir, ceil(iR_glm{i}))+1;
     end
 end
 
 save([wd fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm');
 
-%Compute likelihood
-logl_glm = [];
-for i = 1:nU
-    Rt = proc_withheld.spiketrain(:,i);
-    Rt_glm{i} = Rt_glm{i}'/nRep + 1e-8;
-    if size(Rt_glm{i},1)==1
-        Rt_glm{i} = Rt_glm{i}';
+%Simulate, conditioning on population
+Rt_glm_popcond = {};
+for icell = 1:nU
+    Rt_glm_popcond{icell} = zeros(nRep,Tt);
+    nicell = [(1:icell-1), (icell+1:nU)];
+    %Add coupling to the other spike trains
+    coupled = proc_withheld.spikes(nicell);
+    for ir = 1:nRep
+        ir
+        [iR_glm,vmem,Ispk] = simGLM_monkey_popcond(simstruct, stim, coupled, icell, time_limit);
+        Rt_glm_popcond{icell}(ir, ceil(iR_glm)) = Rt_glm_popcond{icell}(ir, ceil(iR_glm))+1;
     end
-    %Compute log-likelihood:
-    logl_glm(i) = mean(Rt.*log(Rt_glm{i})-(Rt_glm{i})*(1/RefreshRate)) ;
 end
-save([wd fn_out '/GLM_coupled_simulation.mat'], 'Rt_glm', 'logl_glm');
+save([wd fn_out '/GLM_coupled_simulation_popcond.mat'], 'Rt_glm_popcond', '-v7.3');
 
-%Save stuff needed to run this chunk of code
-[proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize);    
-save([wd fn_out '/preprocessed_networkglm_sims.mat'], 'proc_withheld', 'nU', 'Rt_glm', 'goodunits', 'RefreshRate')
+%Log likelihood for all data
+logl_glm_popcond = [];
+for i = 1:nU
+    Rt_g = sum(Rt_glm_popcond{i}, 1);
+    Rt_g = Rt_g'/nRep + 1e-8;
+    Rt = proc_withheld.spiketrain(:,i);
+    %Compute log-likelihood:
+    logl_glm_popcond(i) = mean(Rt.*log(Rt_g)-(Rt_g)*(1/RefreshRate)) ;
+end
 
 %Compare likelihood to uncoupled likelihood:
-load([wd fn_out '/GLM_coupled_simulation.mat'])
 logl_glm_uncoupled = [];
 for idx = 1:nU
     icell = goodunits(idx);
@@ -122,8 +128,8 @@ for idx = 1:nU
     logl_glm_uncoupled(idx) = uncoupled.logl_glm;
 end
 clf
-scatter(logl_glm_uncoupled, logl_glm)
-hold on; plot([-1.5 0], [-1.5 0], 'r')
+scatter(logl_glm_uncoupled, logl_glm_popcond)
+hold on; plot([-.5 0], [-.5 0], 'r')
 xlabel('Uncoupled log-likelihood');
 ylabel('Coupled log-likelihood')
 saveplot(gcf, [wd fn_out '/GLM_loglikelihood_compare.eps'])

@@ -1,5 +1,5 @@
 function sim_coupled_GLM_L1_MLE_popcond(id, nRep, l, maxBins)
-    %sim_coupled_GLM_L1_MLE_popcond(#, 747, 3, 20000)
+    %sim_coupled_GLM_L1_MLE_popcond(1, '747', '3', 20000)
     nRep = str2num(nRep);
     l = str2num(l);
     %Set to working directory

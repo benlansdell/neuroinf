@@ -62,6 +62,6 @@ function sim_coupled_GLM_L1_MLE(id, nRep, l, maxBins)
         for i = 1:nU
             Rt_glm{l,i}(ir, ceil(iR_glm{i})) = Rt_glm{l,i}(ir, ceil(iR_glm{i}))+1;
         end
-        save([wd fn_out '/GLM_coupled_simulation_L1_method_' method '_lambda_' num2str(lambdas(l)) '_ID_' id '.mat'], 'Rt_glm', 'nRep', 'ir');
+        save([wd fn_out '/GLM_coupled_simulation_L1_method_' method '_lambda_' num2str(lambdas(l)) '_ID_' num2str(id) '.mat'], 'Rt_glm', 'nRep', 'ir');
     end
 end

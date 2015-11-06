@@ -67,6 +67,10 @@ save([wd fn_out '/all_units.mat'], 'ggs');
 %3 Simulate models%
 %%%%%%%%%%%%%%%%%%%
 
+maxBins = 1e20;
+maxBins = 20000;
+nB = min(maxBins, size(proc_withheld.stim,1));
+
 time_limit = 80;
 units_conv = zeros(nU,1);
 logl_glm_uncoupled = [];
@@ -76,14 +80,14 @@ for icell = goodunits
     %Simulation with test stim
     disp(num2str(icell));
     %Only within trial times...
-    Tt = size(proc_withheld.stim(:,:),1);
-    Rt = proc_withheld.spiketrain(:,icell);
+    Tt = size(proc_withheld.stim(1:nB,:),1);
+    Rt = proc_withheld.spiketrain(1:nB,icell);
     Rt_glm = zeros(1,Tt);
     nconverged = 0;
 
     for ir = 1:nRep
         ir
-        [iR_glm,vmem,Ispk, converged] = simGLM_monkey(gg, proc_withheld.stim(:,:)/p, time_limit, 1);
+        [iR_glm,vmem,Ispk, converged] = simGLM_monkey(gg, proc_withheld.stim(1:nB,:)/p, time_limit, 1);
         Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
         nconverged = nconverged + converged;
     end

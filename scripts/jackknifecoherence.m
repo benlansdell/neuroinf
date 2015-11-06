@@ -1,9 +1,9 @@
-function jackknifecoherence 
+function jackknifecoherence(wd, fn_in, fn_out)
 	%Set wd to working directory
-	wd = './results_L1_stampede/';
+	%wd = './results_L1_stampede/';
 	%wd = '/Users/dk/Dropbox/AFK_Neuron/Code_GLM_ben/monkeyresults/coherence_networkglm/';
-	load([wd '/preprocessed_networkglm_sims_lambda_0.1.mat'])
-	
+	load([wd fn_in])
+	%proc_withheld 
 	%For each unit
 	h = figure;
 	g = figure;
@@ -12,7 +12,7 @@ function jackknifecoherence
 	coh_SE_05 = zeros(nU,1);
 	coh_SE_cpl_05 = zeros(nU,1);
 
-	%maxt = 20000;
+	maxt = 20000;
 	for icell = 1:nU
 	    truesp = {};
 	    simsp = {};
@@ -25,10 +25,10 @@ function jackknifecoherence
 	    for i = 1:runs
 	        ts = proc_withheld.trialstartend(i, 1);
 	        te = proc_withheld.trialstartend(i, 2);
-	        %if ts > maxt | te > maxt
-	        %	break
-	        %end
-	        truesp{i} = proc_withheld.spiketrain(:,goodunits(icell));
+	        if ts > maxt | te > maxt
+	        	break
+	        end
+	        truesp{i} = proc_withheld.spiketrain(1:maxt,icell);
 	        truesp{i} = truesp{i}(ts:te);
 	        simsp_cpl{i} = Rt_glm{icell}(:);
 	        simsp_cpl{i} = simsp_cpl{i}(ts:te);
@@ -110,8 +110,8 @@ function jackknifecoherence
 	    title(['Unit: ' num2str(goodunits(icell)) ' no. spikes: ' num2str(nspks)])
    	    ylabel('power')
 	end
-	saveplot(h, [wd '/GLM_coherence_inmovement.eps'], 'eps', [6 12])
-	saveplot(g, [wd '/GLM_power_inmovement.eps'], 'eps', [6 12])
+	saveplot(h, [wd fn_out 'coherence_inmovement.eps'], 'eps', [6 12])
+	saveplot(g, [wd fn_out 'power_inmovement.eps'], 'eps', [6 12])
 
 	%Plot scatter plot:
 	clf
@@ -123,7 +123,7 @@ function jackknifecoherence
 	herrorbar(coh_05, coh_cpl_05, coh_SE_05, '.')
 	xlabel('Coherence b/w true spikes and uncoupled GLM')
 	ylabel('Coherence b/w true spikes and coupled GLM')
-	saveplot(gcf, [wd '/GLM_coherence_scatter.eps'])
+	saveplot(gcf, [wd fn_out 'coherence_scatter.eps'])
 
 	%Plot scatter plot mean zero to one Hz coherence:
 	clf
@@ -134,7 +134,7 @@ function jackknifecoherence
 	scatter(meancoh1hz, meancoh1hz_cpl)
 	xlabel('Mean (0-1hz) Coherence b/w true spikes and uncoupled GLM')
 	ylabel('Mean (0-1hz) Coherence b/w true spikes and coupled GLM')
-	saveplot(gcf, [wd '/GLM_coherence_scatter_mean1hz.eps'])
+	saveplot(gcf, [wd fn_out '_coherence_scatter_mean1hz.eps'])
 
 end
 

@@ -120,8 +120,12 @@ for l = 1:length(lambdas)
 end
 
 rng('shuffle')
-time_limit = 80;
-stim = proc_withheld.stim(1:20000,:);
+time_limit = 2400;
+%Only ~5 minutes of data
+%nB = 20000;
+%All data
+nB = size(proc_withheld.stim,1);
+stim = proc_withheld.stim(1:nB,:);
 stim = stim/p;
 for l = 1:length(lambdas)
     for i = 1:nU
@@ -148,8 +152,8 @@ logl_glm = [];
 nB = size(proc_withheld.intrial,1);
 for l = 1:length(lambdas)
     for i = 1:nU
-        Rt = proc_withheld.spiketrain(1:20000,i);
-        tidx = ((1:nB)<=20000) & (proc_withheld.intrial==1)';
+        Rt = proc_withheld.spiketrain(:,i);
+        tidx = ((1:nB)<=nB) & (proc_withheld.intrial==1)';
         Rt = Rt(tidx);
         %Only look within trial times...
         Rt_glm{l,i} = Rt_glm{l,i}'/nRep + 1e-8;
@@ -166,7 +170,7 @@ logl_glm_all = [];
 nB = size(proc_withheld.intrial,1);
 for l = 1:length(lambdas)
     for i = 1:nU
-        Rt = proc_withheld.spiketrain(1:20000,i);
+        Rt = proc_withheld.spiketrain(1:nB,i);
         %Compute log-likelihood:
         logl_glm_all(l,i) = mean(Rt.*log(Rt_glm{l,i})-(Rt_glm{l,i})*(1/RefreshRate)) ;
     end

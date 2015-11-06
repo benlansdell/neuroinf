@@ -65,6 +65,6 @@ function sim_coupled_GLM_L1_MLE_popcond(id, nRep, l, maxBins)
             [iR_glm,vmem,Ispk] = simGLM_monkey_popcond(simstruct, stim, coupled, icell, time_limit);
             Rt_glm_popcond{icell}(ir, ceil(iR_glm)) = Rt_glm_popcond{icell}(ir, ceil(iR_glm))+1;
         end
-        save([wd fn_out '/GLM_coupled_simulation_L1_popcond_lambda_' num2str(lambdas(l)) '_ID_' id '.mat'], 'Rt_glm_popcond', '-v7.3');
+        save([wd fn_out '/GLM_coupled_simulation_L1_popcond_lambda_' num2str(lambdas(l)) '_ID_' num2str(id) '.mat'], 'Rt_glm_popcond', '-v7.3');
     end
 end

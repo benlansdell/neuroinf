@@ -29,7 +29,7 @@ function sim_coupled_GLM_L1_MLE(id, nRep, l, maxBins)
     standardize = 0;
     %nRep = 249;
     [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
-    nB = min(size(proc.stim, 1), maxBins);
+    nB = min(size(proc_withheld.stim, 1), maxBins);
     fn_out = 'results_L1_MLE/';
     fn_out2 = 'results_L1_MLE_20min/';
     trim = 1;

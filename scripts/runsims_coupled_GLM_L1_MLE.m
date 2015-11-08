@@ -1,0 +1,9 @@
+sim_coupled_GLM_L1_MLE(1, 83, 7);
+sim_coupled_GLM_L1_MLE(2, 83, 7);
+sim_coupled_GLM_L1_MLE(3, 83, 7);
+sim_coupled_GLM_L1_MLE(4, 83, 7);
+sim_coupled_GLM_L1_MLE(5, 83, 7);
+sim_coupled_GLM_L1_MLE(6, 83, 7);
+sim_coupled_GLM_L1_MLE(7, 83, 7);
+sim_coupled_GLM_L1_MLE(8, 83, 7);
+sim_coupled_GLM_L1_MLE(9, 83, 7);

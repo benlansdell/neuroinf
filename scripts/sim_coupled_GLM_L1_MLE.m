@@ -1,7 +1,7 @@
 function sim_coupled_GLM_L1_MLE(id, nRep, l, maxBins)
     %sim_coupled_GLM_L1_MLE(#, 249, 3, 20000)
-    nRep = str2num(nRep);
-    l = str2num(l);
+    %nRep = str2num(nRep);
+    %l = str2num(l);
     %Set to working directory
     wd = './';
 
@@ -31,12 +31,14 @@ function sim_coupled_GLM_L1_MLE(id, nRep, l, maxBins)
     [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize, goodunits);    
     nB = min(size(proc.stim, 1), maxBins);
     fn_out = 'results_L1_MLE/';
+    fn_out2 = 'results_L1_MLE_20min/';
     trim = 1;
     Dt = 20;
     maxit = 20;
     dt_glm = 0.1;
     offset = 1;
     mkdir([wd fn_out]);
+    mkdir([wd fn_out2]);
     method = 'spg';
     
     %Load fits (ggs_cpl, lambdas)
@@ -62,6 +64,6 @@ function sim_coupled_GLM_L1_MLE(id, nRep, l, maxBins)
         for i = 1:nU
             Rt_glm{l,i}(ir, ceil(iR_glm{i})) = Rt_glm{l,i}(ir, ceil(iR_glm{i}))+1;
         end
-        save([wd fn_out '/GLM_coupled_simulation_L1_method_' method '_lambda_' num2str(lambdas(l)) '_ID_' num2str(id) '.mat'], 'Rt_glm', 'nRep', 'ir');
+        save([wd fn_out2 '/GLM_coupled_simulation_L1_method_' method '_lambda_' num2str(lambdas(l)) '_ID_' num2str(id) '.mat'], 'Rt_glm', 'nRep', 'ir');
     end
 end

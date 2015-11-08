@@ -23,6 +23,7 @@ standardize = 0;
 [proc, proc_withheld] = preprocess(datafile, binsize, dt, frames, standardize);    
 nB = size(proc.stim, 1);
 fn_out = '/results';
+fn_out2 = '/results_20min';
 trim = 1;
 Dt = 20;
 maxit = 20;
@@ -68,7 +69,7 @@ save([wd fn_out '/all_units.mat'], 'ggs');
 %%%%%%%%%%%%%%%%%%%
 
 maxBins = 1e20;
-maxBins = 20000;
+%maxBins = 20000;
 nB = min(maxBins, size(proc_withheld.stim,1));
 
 time_limit = 80;
@@ -95,7 +96,7 @@ for icell = goodunits
     Rt_glm = Rt_glm'/nRep + 1e-8;
     logl_glm = mean(Rt.*log(Rt_glm)-(Rt_glm)/RefreshRate) ;
     logl_glm_uncoupled(icell) = logl_glm;
-    save([wd fn_out '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm', 'nconverged', 'logl_glm');
+    save([wd fn_out2 '/GLM_cell_simulation_' num2str(icell) '.mat'], 'Rt_glm', 'nconverged', 'logl_glm');
 end
 
 %%%%%%%%%

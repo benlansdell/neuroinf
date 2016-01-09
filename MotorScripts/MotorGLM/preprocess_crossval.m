@@ -2,7 +2,7 @@ function [processed, processed_withheld] = preprocess_crossval(datafile, binsize
 	%Preprocess both spike data and stim data
 	%
 	%Usage:
-	%		[processed, processed_withheld] = preprocess(datafile, binsize, dt, frames, stddev)
+	%		[processed, processed_withheld] = preprocess_crossval(datafile, binsize, dt, frames, stddev)
 	%
 	%Input:
 	%		datafile = .mat file with data
@@ -126,7 +126,6 @@ function [processed, processed_withheld] = preprocess_crossval(datafile, binsize
 	processed.intrial(1) = 0;
 	processed.trialstartend = [trialstartbins', trialendbins'];
 
-
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%Split into train and test sets%
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,8 +183,8 @@ function [processed, processed_withheld] = preprocess_crossval(datafile, binsize
 		end
 		%For trials during the posttraining period
 		if processed.trialstartend(idx,1) > postidx
-			tstart = processed.trialstartend(idx,1)-postidx;
-			tend = processed.trialstartend(idx,2)-postidx;
+			tstart = processed.trialstartend(idx,1)-postidx+preidx;
+			tend = processed.trialstartend(idx,2)-postidx+preidx;
 			trialstartend = [trialstartend; tstart, tend];
 		end
 	end

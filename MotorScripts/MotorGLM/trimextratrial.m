@@ -22,11 +22,13 @@ function [MSTM, SPNDS, SPNDS2] = trimextratrial(MSTM, SPNDS, processed, SPNDS2)
 	for idx = 1:size(trialendstart,1)
 		trimstart = trialendstart(idx,1);
 		trimend = trialendstart(idx,2);
+		%display([num2str(idx), ': ', num2str(trialendstart(end,2)), ' size MSTM: ', num2str(size(MSTM,1))]) 
 		MSTM(trimstart:trimend,:) = [];
 		Dt = (trimend-trimstart+1)/processed.dt;
 		SPNDS((SPNDS*dt>trimstart) & (SPNDS*dt<trimend)) = [];
 		SPNDS(SPNDS*dt>trimend) = SPNDS(SPNDS*dt>trimend)-Dt;
 		trialendstart = trialendstart-(trimend-trimstart+1);
+		%pause
 	end
 
 	if nargin == 4

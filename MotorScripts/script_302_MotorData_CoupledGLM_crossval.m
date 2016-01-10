@@ -25,7 +25,7 @@ offset = 1;
 method = 'spg';
 
 nfolds = 5;
-running = [2,3];
+running = [4,5];
 for fold = running  
     [proc, proc_withheld] = preprocess_crossval([wd datafile], binsize, dt, frames, fold, nfolds, standardize);
     nU = size(proc.spiketrain, 2);

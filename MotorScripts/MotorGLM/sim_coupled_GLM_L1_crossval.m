@@ -1,5 +1,5 @@
-function sim_coupled_GLM_L1_crossval(wd, id, nRep, l, maxBins, fold, nfolds)
-    if nargin < 5
+function sim_coupled_GLM_L1_crossval(wd, id, nRep, l, fold, nfolds, maxBins)
+    if nargin < 7
         maxBins = 1e20;
     end
 
@@ -15,7 +15,7 @@ function sim_coupled_GLM_L1_crossval(wd, id, nRep, l, maxBins, fold, nfolds)
     p = nF*nS;                      %no. stim parameters 
     binsize = 1/RefreshRate;
     standardize = 0;
-    [proc, proc_withheld] = preprocess_crossval([wd datafile], binsize, dt, frames, standardize, fold, nfolds);    
+    [proc, proc_withheld] = preprocess_crossval([wd datafile], binsize, dt, frames, fold, nfolds, standardize);    
     nU = size(proc.spiketrain, 2);
     nB = min(size(proc_withheld.stim, 1), maxBins);
     method = 'spg';

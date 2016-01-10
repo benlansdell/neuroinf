@@ -158,7 +158,7 @@ function [processed, processed_withheld] = preprocess_crossval(datafile, binsize
 	    sp = processed.spikes{idx};
     	sptrain = sp(sp<preidx);
 	    sptest = sp(sp>preidx & sp < postidx);
-	    sptrainpost = sp(sp > postidx)-postidx;
+	    sptrainpost = sp(sp > postidx)-postidx+preidx;
     	processed.spikes{idx} = [sptrain, sptrainpost];
 	    processed_withheld.spikes{idx} = sptest-preidx;
 	end

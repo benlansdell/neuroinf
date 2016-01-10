@@ -24,6 +24,7 @@ Dt = 20;
 maxit = 20;
 dt_glm = 0.1;
 offset = 1;
+maxAtt = 1500;
 
 nfolds = 5;
 for fold = 1:nfolds
@@ -71,17 +72,31 @@ for fold = 1:nfolds
         Rt = proc_withheld.spiketrain(1:nB,icell);
         Rt_glm = zeros(1,Tt);
         nconverged = 0;
+        attempts = 0;
         gg = ggs{icell};
-        for ir = 1:nRep
-            ir
+        %for ir = 1:nRep
+        while nconverged < nRep
+            attempts = attempts + 1
             [iR_glm,vmem,Ispk, converged] = simGLM_monkey(gg, proc_withheld.stim(1:nB,:)/p, time_limit, 1);
-            Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
-            nconverged = nconverged + converged;
+            if (converged == 1)
+                Rt_glm(ceil(iR_glm)) = Rt_glm(ceil(iR_glm))+1;
+                nconverged = nconverged + converged;
+            end
+            if attempts > maxAtt
+                break
+            end
         end
         units_conv(icell) = nconverged;
-        Rt_glm = Rt_glm'/nRep + 1e-8;
+        Rt_glm = Rt_glm'/nconverged + 1e-8;
         logl_glm = mean(Rt.*log(Rt_glm)-(Rt_glm)/RefreshRate) ;
         logl_glm_uncoupled(icell) = logl_glm;
         save([wd '/GLM_cell_simulation_' num2str(icell) '_fold_' num2str(fold) '.mat'], 'Rt_glm', 'nconverged', 'logl_glm');
     end
 end
+
+%for icell = 1:nU
+%    for fold = 1:5 
+%        load([wd '/GLM_cell_simulation_' num2str(icell) '_fold_' num2str(fold) '.mat']);
+%        display(['unit: ' num2str(icell) ' fold: ' num2str(fold) ' nconv: ' num2str(nconverged)])
+%    end
+%end

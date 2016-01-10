@@ -90,7 +90,7 @@ for fold = 1:nfolds
         Rt_glm = Rt_glm'/nconverged + 1e-8;
         logl_glm = mean(Rt.*log(Rt_glm)-(Rt_glm)/RefreshRate) ;
         logl_glm_uncoupled(icell) = logl_glm;
-        save([wd '/GLM_cell_simulation_' num2str(icell) '_fold_' num2str(fold) '.mat'], 'Rt_glm', 'nconverged', 'logl_glm');
+        save([wd '/GLM_cell_simulation_' num2str(icell) '_fold_' num2str(fold) '.mat'], 'Rt_glm', 'nconverged', 'logl_glm', 'attempts');
     end
 end
 

@@ -94,9 +94,11 @@ for fold = 1:nfolds
     end
 end
 
+%Check how well it works...
+%All but one unit in one fold works well! Thank god.
 %for icell = 1:nU
 %    for fold = 1:5 
 %        load([wd '/GLM_cell_simulation_' num2str(icell) '_fold_' num2str(fold) '.mat']);
-%        display(['unit: ' num2str(icell) ' fold: ' num2str(fold) ' nconv: ' num2str(nconverged)])
+%        display(['unit: ' num2str(icell) ' fold: ' num2str(fold) ' nconv: ' num2str(nconverged) ' attempted: ' num2str(attempts)])
 %    end
 %end

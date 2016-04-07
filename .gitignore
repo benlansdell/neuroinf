@@ -1,5 +1,6 @@
 data/
 *.eps
+*.txt
 *.mat
 monkeyresults/
 monkeyresults2/

@@ -4,5 +4,6 @@ data/
 *.mat
 monkeyresults/
 monkeyresults2/
+MotorScripts2/
 GLM_Algorithm_Functions/
 *.m~

@@ -2,6 +2,7 @@ data/
 *.eps
 *.txt
 *.mat
+*.fig
 monkeyresults/
 monkeyresults2/
 MotorScripts2/

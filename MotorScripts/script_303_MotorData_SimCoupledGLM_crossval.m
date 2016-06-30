@@ -5,12 +5,10 @@ wd = '../MotorData/';
 %This takes a long time, so split into many runs of a smaller number of
 %repetitions to divide between CPUs/computers if necessary. 
 
-%These runs should be moved to the one directory, and combined and analyzed afterwards
-%by collapse_sim_coupled_GLM_L1.m
-
+%These runs should be moved to the one directory and combined and analyzed afterwards
 
 nfolds = 5;
-running = [1];
+running = [1,2,3,4,5];
 for fold = running
 	for idx = 1:length(lambdas)
 		sim_coupled_GLM_L1_crossval(wd, 1, 83, idx, fold, nfolds);
@@ -34,4 +32,3 @@ for fold = running
 		sim_coupled_GLM_L1_crossval(wd, 9, 83, idx, fold, nfolds);
 	end
 end
-%Cross validate simulations by only taking subsamples of data...

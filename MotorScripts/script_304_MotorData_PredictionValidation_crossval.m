@@ -1,6 +1,7 @@
 %Set to working directory
 inputd = '../MotorCoupledSims/';
 wd = '../MotorData/';
+fn_out = 'GLM_coherence_compare';
 
 %%%%%%%%%%%%%%%%%%%
 %1 Preprocess data%
@@ -111,4 +112,8 @@ ylabel('Coupled log-likelihood')
 saveplot(gcf, [wd '/GLM_loglikelihood_compare_crossval.eps'])
 
 %Plot coherence...
-jackknifecoherence_crossval(wd, fn_in, fn_out, nfolds)
+for l = 1:length(lambdas)
+    lambda = lambdas(l);
+    display(['Lambda: ' num2str(lambda)])
+    jackknifecoherence_crossval(wd, fn_out, nfolds, lambda)
+end

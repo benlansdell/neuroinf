@@ -11,13 +11,13 @@ ds = 0.001;                     %Spike time resolution
 dt = ds*RefreshRate;            %Time scale spike times are resovled at,
                                 % relative to stim timescale
 datafile = '/mabel.mat';
-nU = 9;                        %no. units
+nU = 9;                         %no. units
 nS = 4;                         %no. stim components
 frames = 80;                    %no. stim frames 
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 747;                      %no. sim repetitions
+nRep = 747;                     %no. sim repetitions
 standardize = 0;
 trim = 1;
 Dt = 20;
@@ -58,7 +58,6 @@ for fold = 1:nfolds
     %3 Simulate models%
     %%%%%%%%%%%%%%%%%%%
     maxBins = 1e20;
-    %maxBins = 20000;
     nB = min(maxBins, size(proc_withheld.stim,1));
     time_limit = 80;
     units_conv = zeros(nU,1);
@@ -74,7 +73,6 @@ for fold = 1:nfolds
         nconverged = 0;
         attempts = 0;
         gg = ggs{icell};
-        %for ir = 1:nRep
         while nconverged < nRep
             attempts = attempts + 1
             [iR_glm,vmem,Ispk, converged] = simGLM_monkey(gg, proc_withheld.stim(1:nB,:)/p, time_limit, 1);
@@ -93,12 +91,3 @@ for fold = 1:nfolds
         save([wd '/GLM_cell_simulation_' num2str(icell) '_fold_' num2str(fold) '.mat'], 'Rt_glm', 'nconverged', 'logl_glm', 'attempts');
     end
 end
-
-%Check how well it works...
-%All but one unit in one fold works well! Thank god.
-%for icell = 1:nU
-%    for fold = 1:5 
-%        load([wd '/GLM_cell_simulation_' num2str(icell) '_fold_' num2str(fold) '.mat']);
-%        display(['unit: ' num2str(icell) ' fold: ' num2str(fold) ' nconv: ' num2str(nconverged) ' attempted: ' num2str(attempts)])
-%    end
-%end

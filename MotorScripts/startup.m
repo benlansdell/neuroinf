@@ -11,4 +11,4 @@ addpath_recurse([pwd '/L1Group/']);
 
 %Note: add path to Pillow's GLM code here
 %      not necessary if already added to MATLAB's search path
-%      addpath_recurse('/home/lansdell/projects/neuroinf/GLM_Algorithm_Functions');
+      addpath_recurse('/home/lansdell/projects/neuroinf/GLM_Algorithm_Functions');

@@ -6,8 +6,6 @@ wd = '../MotorData/';
 %repetitions to divide between CPUs/computers if necessary. 
 
 %These runs should be moved to the one directory and combined and analyzed afterwards
-
-nfolds = 5;
 running = [1,2,3,4,5];
 for fold = running
 	for idx = 1:length(lambdas)

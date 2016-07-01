@@ -1,5 +1,13 @@
-%Set to working directory
+%Note: This script demonstrates how 
+%      The particulars of how it is distributed over computers/CPUs depends on 
+%      the user's setup and resources. 
+
+%Note: Directory containing output of script_303_MotorData_SimCoupledGLM_crossval
+%      This will depends on how the user implements 
+%inputd = '../MotorData/';
 inputd = '../MotorCoupledSims/';
+
+%Set to working directory
 wd = '../MotorData/';
 fn_out = 'GLM_coherence_compare';
 

@@ -2,10 +2,16 @@ lambdas = [.1 .3 1 3 10 30 100 300];
 wd = '../MotorData/';
 
 %Simulate coupled GLM with range of lambda values
-%This takes a long time, so split into many runs of a smaller number of
-%repetitions to divide between CPUs/computers if necessary. 
 
-%These runs should be moved to the one directory and combined and analyzed afterwards
+%Note: this takes a long time, so must be split into many runs of a smaller number of
+%      repetitions to divide between CPUs/computers as necessary. 
+%      These runs should be moved to the one directory and combined and analyzed
+%      afterwards.
+%      
+%      This script demonstrates how such a run would look like if ran serially
+%      The particulars of how it is distributed over computers/CPUs depends on 
+%      the user's setup and resources. 
+
 running = [1,2,3,4,5];
 for fold = running
 	for idx = 1:length(lambdas)

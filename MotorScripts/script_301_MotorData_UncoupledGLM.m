@@ -11,21 +11,24 @@ ds = 0.001;                     %Spike time resolution
 dt = ds*RefreshRate;            %Time scale spike times are resovled at,
                                 % relative to stim timescale
 datafile = '/mabel.mat';
-nU = 9;                        %no. units
+nU = 9;                         %no. units
 nS = 4;                         %no. stim components
 frames = 80;                    %no. stim frames 
 nF = 2*frames+1;
 p = nF*nS;                      %no. stim parameters 
 binsize = 1/RefreshRate;
-nRep = 747;                      %no. sim repetitions
+nRep = 747;                     %no. sim repetitions
 standardize = 0;
+
+%%Load data from mabel.mat
 [proc, proc_withheld] = preprocess([wd datafile], binsize, dt, frames, standardize);    
-nB = size(proc.stim, 1);
-trim = 1;
+nB = size(proc.stim, 1);        %no. of time bins
+trim = 1;                       %whether to only include movement times or entire recording
 Dt = 20;
-maxit = 20;
+maxit = 20;                     %early stopping, after max 20 iterations
 dt_glm = 0.1;
-offset = 1;
+offset = 1;                     %whether to offset stim relative to spikes so
+                                % model is predictive of future motor output
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %2 Fitting uncoupled GLM%
@@ -34,6 +37,8 @@ offset = 1;
 ggs = {};
 for icell = 1:nU
     disp(['Fitting unit ' num2str(icell)]);
+
+    %Prepare data
     stim = proc.stim;
     stim = stim/p;
     resp = proc.spikes{icell};
@@ -41,6 +46,7 @@ for icell = 1:nU
 
     stacked = proc.stacked;
     stacked = stacked/p;
+    %Use STA as initial guess of stimulus filters
     sta = stacked'*sptrain/sum(sptrain)-mean(stacked,1)'; 
     sta = reshape(sta,nF,[]);
 
@@ -50,6 +56,7 @@ for icell = 1:nU
     gg0.tspi = 1;
 
     opts = {'display', 'iter', 'maxiter', maxit};
+    %Perform MLE
     [gg, negloglival] = MLfit_GLM_trim(gg0,stim,opts,proc,trim, offset);
     ggs{icell} = gg;
 end
